@@ -20,12 +20,12 @@ room_classes = ["Background", "Outdoor", "Wall", "Kitchen", "Living Room" ,"Bed 
 icon_classes = ["No Icon", "Window", "Door", "Closet", "Electrical Applience" ,"Toilet", "Sink", "Sauna Bench", "Fire Place", "Bathtub", "Chimney"]
 
 data_folder = 'data/cubicasa5k/'
-data_file = 'test.jpg'
+data_file = 'test.txt'
 normal_set = FloorplanSVG(data_folder, data_file, format='txt', original_size=True)
 data_loader = DataLoader(normal_set, batch_size=1, num_workers=0)
 data_iter = iter(data_loader)
 # Setup Model
-model = get_model('model_1427', 51)
+model = get_model('hg_furukawa_original', 51)
 
 n_classes = 44
 split = [21, 12, 11]

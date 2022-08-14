@@ -24,7 +24,21 @@ docker run --rm -it --init \
   -e NVIDIA_VISIBLE_DEVICES=0 \
   cubi jupyter-lab --port 1111 --ip 0.0.0.0 --no-browser
 ```
+
+```bash
+docker run --rm -it --init \
+  --gpus=all \
+  --ipc=host \
+  --user="$(id -u):$(id -g)" \
+  cubi
+```
+
 You can now open a terminal in [JupyterLab web interface](http://localhost:1111) to execute more commands in the container.
+
+To solve permission issues with Docker and VS Code, use 
+```bash
+sudo chown -R user /home/user 
+```
 
 ## Database creation
 We create a LMDB database of the dataset, where we store the floorplan image, segmentation tensors and heatmap coordinates. This way we can access the data faster during training and evaluation. The downside however is that the database takes about 105G of hard drive space. There is an option to parse the SVG file on the go but it is slow for training.
