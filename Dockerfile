@@ -31,7 +31,7 @@ RUN chmod -R a+rwX /home/user
 # Set up the Conda environment
 ENV CONDA_AUTO_UPDATE_CONDA=false
 ENV PATH=/home/user/miniconda/bin:$PATH
-RUN curl -sLo ~/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-py38_4.8.2-Linux-x86_64.sh \
+RUN curl -sLo ~/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-py38_4.12.0-Linux-x86_64.sh \
  && chmod +x ~/miniconda.sh \
  && ~/miniconda.sh -b -p ~/miniconda \
  && rm ~/miniconda.sh \
@@ -50,16 +50,19 @@ RUN sudo apt-get update
 RUN sudo apt-get upgrade -y
 RUN sudo apt-get install -y \
         build-essential 
+
 RUN sudo apt-get install -y \
         libfreetype6-dev libfontconfig1-dev xclip libgeos-dev libffi6 libffi-dev \
-        libgl1-mesa-dev libglu1-mesa libxi6 libsm6 xz-utils libxrender1 nano dos2unix software-properties-common
+        libgl1-mesa-dev libglu1-mesa libxi6 libsm6 xz-utils libxrender1 \
+        gfortran python3-dev \
+        libhdf5-serial-dev libhdf5-dev
 
 COPY requirements.txt /app/.
 
 RUN pip install -r requirements.txt --ignore-installed certifi==2018.10.15
 
 ENV PROGRAM_PATH floorplan
-RUN mkdir -p ${PROGRAM_PATH}
+RUN mkdir -p ${HOME}/${PROGRAM_PATH}
 
 # Add program
-ADD ./ ${PROGRAM_PATH}
+ADD ./ ${HOME}/${PROGRAM_PATH}
