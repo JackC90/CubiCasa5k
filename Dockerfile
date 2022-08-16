@@ -66,3 +66,5 @@ RUN mkdir -p ${HOME}/${PROGRAM_PATH}
 
 # Add program
 ADD ./ ${HOME}/${PROGRAM_PATH}
+
+WORKDIR ${HOME}/${PROGRAM_PATH}

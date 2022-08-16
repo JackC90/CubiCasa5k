@@ -29,7 +29,6 @@ docker run --rm -it --init \
 docker run --rm -it --init \
   --gpus=all \
   --ipc=host \
-  --user="$(id -u):$(id -g)" \
   cubi
 ```
 
@@ -37,7 +36,9 @@ You can now open a terminal in [JupyterLab web interface](http://localhost:1111)
 
 To solve permission issues with Docker and VS Code, use 
 ```bash
-sudo chown -R user /home/user 
+sudo chown -R user /home/user
+
+sudo chown -R user ./floorplan
 ```
 
 ## Database creation
