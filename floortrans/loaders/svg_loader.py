@@ -17,8 +17,8 @@ class FloorplanSVG(Dataset):
         self.augmentations = augmentations
         self.get_data = None
         self.original_size = original_size
-        self.image_file_name = '/F1_scaled.png'
-        self.org_image_file_name = '/F1_original.png'
+        self.image_file_name = '/F1_scaled.jpg'
+        self.org_image_file_name = '/F1_original.jpg'
         self.svg_file_name = '/model.svg'
 
         if format == 'txt':

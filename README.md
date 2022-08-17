@@ -29,6 +29,7 @@ docker run --rm -it --init \
 docker run --rm -it --init \
   --gpus=all \
   --ipc=host \
+  --volume=$PWD:/home/user/floorplan \
   cubi
 ```
 

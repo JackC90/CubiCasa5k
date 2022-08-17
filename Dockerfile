@@ -15,7 +15,6 @@ RUN apt-get update && apt-get install -y \
 
 # Create a working directory
 RUN mkdir /app
-WORKDIR /app
 
 # Create a non-root user and switch to it
 RUN adduser --disabled-password --gecos '' --shell /bin/bash user \
@@ -59,7 +58,7 @@ RUN sudo apt-get install -y \
 
 COPY requirements.txt /app/.
 
-RUN pip install -r requirements.txt --ignore-installed certifi==2018.10.15
+RUN pip install -r ./app/requirements.txt --ignore-installed certifi==2018.10.15
 
 ENV PROGRAM_PATH floorplan
 RUN mkdir -p ${HOME}/${PROGRAM_PATH}
