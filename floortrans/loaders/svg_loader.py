@@ -5,6 +5,8 @@ from torch.utils.data import Dataset
 import cv2
 import numpy as np
 from numpy import genfromtxt
+import glob
+
 from floortrans.loaders.house import House
 
 
@@ -17,8 +19,8 @@ class FloorplanSVG(Dataset):
         self.augmentations = augmentations
         self.get_data = None
         self.original_size = original_size
-        self.image_file_name = '/F1_scaled.png'
-        self.org_image_file_name = '/F1_original.png'
+        self.image_file_name = '/F1_scaled.*'
+        self.org_image_file_name = '/F1_original.*'
         self.svg_file_name = '/model.svg'
 
         if format == 'txt':
@@ -50,7 +52,9 @@ class FloorplanSVG(Dataset):
         return sample
 
     def get_txt(self, index):
-        fplan = cv2.imread(self.data_folder + self.folders[index] + self.image_file_name)
+        image_file_name_check = glob.glob(self.data_folder + self.folders[index] + self.image_file_name)
+        image_file_name = image_file_name_check[0] if image_file_name_check else None
+        fplan = cv2.imread(image_file_name)
         fplan = cv2.cvtColor(fplan, cv2.COLOR_BGR2RGB)  # correct color channels
         height, width, nchannel = fplan.shape
         fplan = np.moveaxis(fplan, -1, 0)
@@ -62,7 +66,9 @@ class FloorplanSVG(Dataset):
         heatmaps = house.get_heatmap_dict()
         coef_width = 1
         if self.original_size:
-            fplan = cv2.imread(self.data_folder + self.folders[index] + self.org_image_file_name)
+            org_image_file_name_check = glob.glob(self.data_folder + self.folders[index] + self.org_image_file_name)
+            org_image_file_name = org_image_file_name_check[0] if org_image_file_name_check else None
+            fplan = cv2.imread(org_image_file_name)
             fplan = cv2.cvtColor(fplan, cv2.COLOR_BGR2RGB)  # correct color channels
             height_org, width_org, nchannel = fplan.shape
             fplan = np.moveaxis(fplan, -1, 0)

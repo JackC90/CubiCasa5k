@@ -1,6 +1,6 @@
 for f in floorplans/*; do \
     fwe=$(basename "$f" | cut -d. -f1); \
-    echo "/floorplans/$fwe/" >> "test.txt"; \
+    echo "floorplans/$fwe" >> "test.txt"; \
     echo "$f"; \
     mkdir "floorplans/$fwe"; \
     cp "$f" "floorplans/$fwe/F1_original.jpg"; \

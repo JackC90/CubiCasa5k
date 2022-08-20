@@ -29,6 +29,7 @@ docker run --rm -it --init \
 docker run --rm -it --init \
   --gpus=all \
   --ipc=host \
+  --volume=$PWD:/home/user/floorplan \
   cubi
 ```
 
@@ -38,7 +39,7 @@ To solve permission issues with Docker and VS Code, use
 ```bash
 sudo chown -R user /home/user
 
-sudo chown -R user ./floorplan
+sudo chown -R user ./
 ```
 
 ## Database creation
