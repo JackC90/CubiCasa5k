@@ -29,7 +29,28 @@ docker run --rm -it --init \
 docker run --rm -it --init \
   --gpus=all \
   --ipc=host \
+  --publish 1111:1111 \
+  --volume=$PWD:/app \
+  -e NVIDIA_VISIBLE_DEVICES=0 \
+  cubi jupyter-lab --port 1111 --ip 0.0.0.0 --no-browser
+```
+
+```bash
+docker run --rm -it --init \
+  --gpus=all \
+  --ipc=host \
+  --publish 1111:1111 \
+  -e NVIDIA_VISIBLE_DEVICES=0 \
+  cubi
+```
+
+```bash
+docker run --rm -it --init \
+  --gpus=all \
+  --ipc=host \
+  --publish 1111:1111 \
   --volume=$PWD:/home/user/floorplan \
+  -e NVIDIA_VISIBLE_DEVICES=0 \
   cubi
 ```
 
