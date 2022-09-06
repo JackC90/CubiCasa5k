@@ -32,6 +32,8 @@ data_iter = iter(data_loader)
 # Setup Model
 model = get_model('hg_furukawa_original', 51)
 n_classes = 44
+n_icons = len(icon_classes)
+n_rooms = len(room_classes)
 split = [21, 12, 11]
 model.conv4_ = torch.nn.Conv2d(256, n_classes, bias=True, kernel_size=1)
 model.upsample = torch.nn.ConvTranspose2d(n_classes, n_classes, kernel_size=4, stride=4)
@@ -54,50 +56,15 @@ logger.addHandler(fh)
 
 # Predict
 with torch.no_grad():
-    for count, val in tqdm(enumerate(data_loader), total=len(data_loader),
-                            ncols=80, leave=False):
-        logger.info(count)
-        folder = val['folder'][0]
-        image = val['image']
-        label = val['label']
-        label_np = label.data.numpy()[0]
+  for count, val in tqdm(enumerate(data_loader), total=len(data_loader),
+                          ncols=80, leave=False):
+    logger.info(count)
+    folder = val['folder'][0]
+    image = val['image']
+    label = val['label']
+    
+    label_np = label.data.numpy()[0]
 
-        things = get_evaluation_tensors(val, model, split, None, rotate=True)
-
-        label, segmentation, pol_segmentation = things
-        height = label_np.shape[1]
-        width = label_np.shape[2]
-        img_size = (height, width)
-        
-        rotations = [(0, 0), (1, -1), (2, 2), (-1, 1)]
-        pred_count = len(rotations)
-        prediction = torch.zeros([pred_count, n_classes, height, width])
-        for i, r in enumerate(rotations):
-            forward, back = r
-            # We rotate first the image
-            rot_image = rot(image, 'tensor', forward)
-            pred = model(rot_image)
-            # We rotate prediction back
-            pred = rot(pred, 'tensor', back)
-            # We fix heatmaps
-            pred = rot(pred, 'points', back)
-            # We make sure the size is correct
-            pred = F.interpolate(pred, size=(height, width), mode='bilinear', align_corners=True)
-            # We add the prediction to output
-            prediction[i] = pred[0]
-
-        prediction = torch.mean(prediction, 0, True)
-        rooms_label = label_np[0]
-        icons_label = label_np[1]
-
-        rooms_pred = F.softmax(prediction[0, 21:21+12], 0).cpu().data.numpy()
-        rooms_pred = np.argmax(rooms_pred, axis=0)
-
-        icons_pred = F.softmax(prediction[0, 21+12:], 0).cpu().data.numpy()
-        icons_pred = np.argmax(icons_pred, axis=0)
-
-
-with torch.no_grad():
     height = label_np.shape[1]
     width = label_np.shape[2]
     img_size = (height, width)
@@ -106,98 +73,48 @@ with torch.no_grad():
     pred_count = len(rotations)
     prediction = torch.zeros([pred_count, n_classes, height, width])
     for i, r in enumerate(rotations):
-        forward, back = r
-        # We rotate first the image
-        rot_image = rot(image, 'tensor', forward)
-        pred = model(rot_image)
-        # We rotate prediction back
-        pred = rot(pred, 'tensor', back)
-        # We fix heatmaps
-        pred = rot(pred, 'points', back)
-        # We make sure the size is correct
-        pred = F.interpolate(pred, size=(height, width), mode='bilinear', align_corners=True)
-        # We add the prediction to output
-        prediction[i] = pred[0]
+      forward, back = r
+      # We rotate first the image
+      rot_image = rot(image, 'tensor', forward)
+      pred = model(rot_image)
+      # We rotate prediction back
+      pred = rot(pred, 'tensor', back)
+      # We fix heatmaps
+      pred = rot(pred, 'points', back)
+      # We make sure the size is correct
+      pred = F.interpolate(pred, size=(height, width), mode='bilinear', align_corners=True)
+      # We add the prediction to output
+      prediction[i] = pred[0]
 
-prediction = torch.mean(prediction, 0, True)
-rooms_label = label_np[0]
-icons_label = label_np[1]
+    prediction = torch.mean(prediction, 0, True)
+    rooms_label = label_np[0]
+    icons_label = label_np[1]
 
-rooms_pred = F.softmax(prediction[0, 21:21+12], 0).cpu().data.numpy()
-rooms_pred = np.argmax(rooms_pred, axis=0)
+    rooms_pred = F.softmax(prediction[0, 21:21+12], 0).cpu().data.numpy()
+    rooms_pred = np.argmax(rooms_pred, axis=0)
 
-icons_pred = F.softmax(prediction[0, 21+12:], 0).cpu().data.numpy()
-icons_pred = np.argmax(icons_pred, axis=0)
+    icons_pred = F.softmax(prediction[0, 21+12:], 0).cpu().data.numpy()
+    icons_pred = np.argmax(icons_pred, axis=0)
 
-plt.figure(figsize=(12,12))
-ax = plt.subplot(1, 1, 1)
-ax.axis('off')
-rseg = ax.imshow(rooms_pred, cmap='rooms', vmin=0, vmax=n_rooms-0.1)
-cbar = plt.colorbar(rseg, ticks=np.arange(n_rooms) + 0.5, fraction=0.046, pad=0.01)
-cbar.ax.set_yticklabels(room_classes, fontsize=20)
-plt.show()
+    # Post-processing
+    heatmaps, rooms, icons = split_prediction(prediction, img_size, split)
+    polygons, types, room_polygons, room_types = get_polygons((heatmaps, rooms, icons), 0.2, [1, 2])
 
-plt.figure(figsize=(12,12))
-ax = plt.subplot(1, 1, 1)
-ax.axis('off')
-iseg = ax.imshow(icons_pred, cmap='icons', vmin=0, vmax=n_icons-0.1)
-cbar = plt.colorbar(iseg, ticks=np.arange(n_icons) + 0.5, fraction=0.046, pad=0.01)
-cbar.ax.set_yticklabels(icon_classes, fontsize=20)
-plt.show()
+    pol_room_seg, pol_icon_seg = polygons_to_image(polygons, types, room_polygons,  room_types, height, width)
+    plt.figure(figsize=(12,12))
+    ax = plt.subplot(1, 1, 1)
+    ax.axis('off')
+    rseg = ax.imshow(pol_room_seg, cmap='rooms', vmin=0, vmax=n_rooms-0.1)
+    cbar = plt.colorbar(rseg, ticks=np.arange(n_rooms) + 0.5, fraction=0.046, pad=0.01)
+    cbar.ax.set_yticklabels(room_classes, fontsize=20)
+    plt.tight_layout()
+    plt.show()
 
-heatmaps, rooms, icons = split_prediction(prediction, img_size, split)
-polygons, types, room_polygons, room_types = get_polygons((heatmaps, rooms, icons), 0.2, [1, 2])
-
-pol_room_seg, pol_icon_seg = polygons_to_image(polygons, types, room_polygons, room_types, height, width)
-plt.figure(figsize=(12,12))
-ax = plt.subplot(1, 1, 1)
-ax.axis('off')
-rseg = ax.imshow(pol_room_seg, cmap='rooms', vmin=0, vmax=n_rooms-0.1)
-cbar = plt.colorbar(rseg, ticks=np.arange(n_rooms) + 0.5, fraction=0.046, pad=0.01)
-cbar.ax.set_yticklabels(room_classes, fontsize=20)
-plt.tight_layout()
-plt.show()
-
-plt.figure(figsize=(12,12))
-ax = plt.subplot(1, 1, 1)
-ax.axis('off')
-iseg = ax.imshow(pol_icon_seg, cmap='icons', vmin=0, vmax=n_icons-0.1)
-cbar = plt.colorbar(iseg, ticks=np.arange(n_icons) + 0.5, fraction=0.046, pad=0.01)
-cbar.ax.set_yticklabels(icon_classes, fontsize=20)
-plt.tight_layout()
-plt.show()
-
-fig = plt.figure(figsize=(26, 12))
-grid = AxesGrid(fig, 111,
-                nrows_ncols=(1, 2),
-                axes_pad=0.05,
-                cbar_mode='single',
-                cbar_location='right',
-                cbar_pad=0.1
-                )
-images = [label_np[0], pol_room_seg]
-for i, ax in enumerate(grid):
-    ax.set_axis_off()
-    im = ax.imshow(images[i], cmap='rooms', vmin=0, vmax=n_rooms-0.1)
-cbar = ax.cax.colorbar(rseg, ticks=np.arange(n_rooms) + 0.5)
-cbar.ax.set_yticklabels(room_classes, fontsize=26)
-plt.show()
-
-
-fig = plt.figure(figsize=(26, 12))
-grid = AxesGrid(fig, 111,
-                nrows_ncols=(1, 2),
-                axes_pad=0.05,
-                cbar_mode='single',
-                cbar_location='right',
-                cbar_pad=0.1
-                )
-
-images = [label_np[1], pol_icon_seg]
-for i, ax in enumerate(grid):
-    ax.set_axis_off()
-    im = ax.imshow(images[i], cmap='icons', vmin=0, vmax=n_icons-0.1)
-
-cbar = ax.cax.colorbar(iseg, ticks=np.arange(n_icons) + 0.5)
-cbar.ax.set_yticklabels(icon_classes, fontsize=26)
-plt.show()
+    plt.figure(figsize=(12,12))
+    ax = plt.subplot(1, 1, 1)
+    ax.axis('off')
+    iseg = ax.imshow(pol_icon_seg, cmap='icons', vmin=0, vmax=n_icons-0.1)
+    cbar = plt.colorbar(iseg, ticks=np.arange(n_icons) + 0.5, fraction=0.046, pad=0.01)
+    cbar.ax.set_yticklabels(icon_classes, fontsize=20)
+    plt.tight_layout()
+    plt.show()
