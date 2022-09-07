@@ -56,21 +56,24 @@ logger.addHandler(fh)
 
 # Predict
 with torch.no_grad():
+  # Rotation vars
+  rotations = [(0, 0), (1, -1), (2, 2), (-1, 1)]
+  pred_count = len(rotations)
+
   for count, val in tqdm(enumerate(data_loader), total=len(data_loader),
                           ncols=80, leave=False):
     logger.info(count)
     folder = val['folder'][0]
     image = val['image']
-    label = val['label']
-    
-    label_np = label.data.numpy()[0]
+    images_val = val['image'].cuda()
+    filename = val['filename']
+    height = val['height']
+    width = val['width']
 
-    height = label_np.shape[1]
-    width = label_np.shape[2]
+    image_np = image.data.numpy()[0]
     img_size = (height, width)
     
-    rotations = [(0, 0), (1, -1), (2, 2), (-1, 1)]
-    pred_count = len(rotations)
+    rot = RotateNTurns()
     prediction = torch.zeros([pred_count, n_classes, height, width])
     for i, r in enumerate(rotations):
       forward, back = r
@@ -87,8 +90,6 @@ with torch.no_grad():
       prediction[i] = pred[0]
 
     prediction = torch.mean(prediction, 0, True)
-    rooms_label = label_np[0]
-    icons_label = label_np[1]
 
     rooms_pred = F.softmax(prediction[0, 21:21+12], 0).cpu().data.numpy()
     rooms_pred = np.argmax(rooms_pred, axis=0)
@@ -105,16 +106,8 @@ with torch.no_grad():
     ax = plt.subplot(1, 1, 1)
     ax.axis('off')
     rseg = ax.imshow(pol_room_seg, cmap='rooms', vmin=0, vmax=n_rooms-0.1)
-    cbar = plt.colorbar(rseg, ticks=np.arange(n_rooms) + 0.5, fraction=0.046, pad=0.01)
-    cbar.ax.set_yticklabels(room_classes, fontsize=20)
-    plt.tight_layout()
-    plt.show()
-
-    plt.figure(figsize=(12,12))
-    ax = plt.subplot(1, 1, 1)
-    ax.axis('off')
     iseg = ax.imshow(pol_icon_seg, cmap='icons', vmin=0, vmax=n_icons-0.1)
-    cbar = plt.colorbar(iseg, ticks=np.arange(n_icons) + 0.5, fraction=0.046, pad=0.01)
-    cbar.ax.set_yticklabels(icon_classes, fontsize=20)
+    # cbar = plt.colorbar(rseg, ticks=np.arange(n_rooms) + 0.5, fraction=0.046, pad=0.01)
+    # cbar.ax.set_yticklabels(room_classes, fontsize=20)
     plt.tight_layout()
-    plt.show()
+    plt.savefig(folder, format="svg")

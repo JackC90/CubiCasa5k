@@ -67,18 +67,13 @@ class ImageLoader(Dataset):
             fplan = cv2.cvtColor(fplan, cv2.COLOR_BGR2RGB)  # correct color channels
             height_org, width_org, nchannel = fplan.shape
             fplan = np.moveaxis(fplan, -1, 0)
-            label = label.unsqueeze(0)
-            label = torch.nn.functional.interpolate(label,
-                                                    size=(height_org, width_org),
-                                                    mode='nearest')
-            label = label.squeeze(0)
 
             coef_height = float(height_org) / float(height)
             coef_width = float(width_org) / float(width)
 
         img = torch.tensor(fplan.astype(np.float32))
 
-        sample = {'image': img, 'label': label, 'folder': self.folders[index], 'scale': coef_width}
+        sample = {'image': img, 'folder': self.folders[index], 'scale': coef_width, 'height': height_org, 'width': width_org}
 
         return sample
 
