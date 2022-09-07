@@ -9,8 +9,8 @@ COPY requirements.txt /app/.
 
 RUN pip install -r requirements.txt --ignore-installed certifi==2018.10.15
 
-ENV PROGRAM_PATH /floorplan
-RUN mkdir -p ${HOME}${PROGRAM_PATH}
+ENV PROGRAM_PATH floorplan
+RUN mkdir -p ${HOME}/${PROGRAM_PATH}
 
 RUN sudo adduser --disabled-password --gecos '' --shell /bin/bash user || echo 'User $user already exists.'
 USER user
