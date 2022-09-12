@@ -66,7 +66,6 @@ with torch.no_grad():
     folder = val['folder'][0]
     image = val['image']
     images_val = val['image'].cuda()
-    filename = val['filename']
     height = val['height']
     width = val['width']
 
@@ -78,7 +77,7 @@ with torch.no_grad():
     for i, r in enumerate(rotations):
       forward, back = r
       # We rotate first the image
-      rot_image = rot(image, 'tensor', forward)
+      rot_image = rot(images_val, 'tensor', forward)
       pred = model(rot_image)
       # We rotate prediction back
       pred = rot(pred, 'tensor', back)
