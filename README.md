@@ -91,3 +91,9 @@ Additional option for evaluation can be found in the script file. The results ca
 ## Todo
 - Modify create_lmdb.py to save files as uint8 (now using float32 which is the main reason why the lmdb file gets as big as over 100 gbytes).
 - Modify augmentations.py to operate with numpy arrays (the reason why it currently utilizes torch tensors is the fact that in our earlier version we applied augmentations to heatmap tensors and not to heatmap dicts which is the correct way to do it)
+
+
+## Debugging
+```bash
+CUDA_LAUNCH_BLOCKING=1 python start.py
+```
