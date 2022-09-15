@@ -4,21 +4,14 @@ FROM nvidia/cuda:9.2-base-ubuntu16.04
 
 # Install some basic utilities
 RUN apt-get update && apt-get install -y \
-    wget \
     curl \
     ca-certificates \
     sudo \
     git \
     bzip2 \
-    libglib2.0-0 \
-    libxext6 \
-    libsm6 \
-    libxrender1 \
-    mercurial \
-    subversion \
+    libx11-6 \
     build-essential \
- && rm -rf /var/lib/apt/lists/* \
- && apt-get clean
+ && rm -rf /var/lib/apt/lists/*
 
 # Create a working directory
 RUN mkdir /app
@@ -38,20 +31,20 @@ RUN curl -sLo ~/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-4.7.
  && rm ~/miniconda.sh
 
 # Create a Python 3.6 environment
-# RUN /home/user/miniconda/bin/conda create -y --name py36 python=3.6.9 \
-#  && /home/user/miniconda/bin/conda clean -ya
-# ENV CONDA_DEFAULT_ENV=py36
-# ENV CONDA_PREFIX=/home/user/miniconda/envs/$CONDA_DEFAULT_ENV
-# ENV PATH=$CONDA_PREFIX/bin:$PATH
-# RUN /home/user/miniconda/bin/conda install conda-build=3.18.9=py36_3 \
-#  && /home/user/miniconda/bin/conda clean -ya
+RUN /home/user/miniconda/bin/conda create -y --name py36 python=3.6.9 \
+ && /home/user/miniconda/bin/conda clean -ya
+ENV CONDA_DEFAULT_ENV=py36
+ENV CONDA_PREFIX=/home/user/miniconda/envs/$CONDA_DEFAULT_ENV
+ENV PATH=$CONDA_PREFIX/bin:$PATH
+RUN /home/user/miniconda/bin/conda install conda-build=3.18.9=py36_3 \
+ && /home/user/miniconda/bin/conda clean -ya
 
-# # CUDA 9.2-specific steps
-# RUN conda install -y -c pytorch \
-#     cudatoolkit=9.2 \
-#     "pytorch=1.4.0=py3.6_cuda9.2.148_cudnn7.6.3_0" \
-#     "torchvision=0.5.0=py36_cu92" \
-#  && conda clean -ya
+# CUDA 9.2-specific steps
+RUN conda install -y -c pytorch \
+    cudatoolkit=9.2 \
+    "pytorch=1.4.0=py3.6_cuda9.2.148_cudnn7.6.3_0" \
+    "torchvision=0.5.0=py36_cu92" \
+ && conda clean -ya
 
 # Install HDF5 Python bindings
 RUN conda install -y h5py=2.8.0 \
@@ -74,7 +67,7 @@ RUN sudo apt-get update && sudo apt-get install -y --no-install-recommends \
     libgtk2.0-0 \
     libcanberra-gtk-module \
  && sudo rm -rf /var/lib/apt/lists/*
-RUN conda install -y -c menpo opencv \
+RUN conda install -y -c menpo opencv3=3.1.0 \
  && conda clean -ya
 
 # Set the default command to python3

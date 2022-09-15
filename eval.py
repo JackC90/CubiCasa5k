@@ -42,7 +42,7 @@ def print_res(name, res, cls_names, logger):
 
 def evaluate(args, log_dir, writer, logger):
 
-    normal_set = FloorplanSVG(args.data_path, 'test.txt', format='lmdb', lmdb_folder='cubi_lmdb/', augmentations=Compose([DictToTensor()]))
+    normal_set = FloorplanSVG(args.data_path, 'test.txt', format='txt', lmdb_folder='cubi_lmdb/', augmentations=Compose([DictToTensor()]))
     data_loader = data.DataLoader(normal_set, batch_size=1, num_workers=0)
 
     checkpoint = torch.load(args.weights)
@@ -89,7 +89,7 @@ if __name__ == '__main__':
                         help='Path to data directory')
     parser.add_argument('--n-classes', nargs='?', type=int, default=44,
                         help='# of the epochs')
-    parser.add_argument('--weights', nargs='?', type=str, default=None,
+    parser.add_argument('--weights', nargs='?', type=str, default='model_best_val_loss_var.pkl',
                         help='Path to previously trained model weights file .pkl')
     parser.add_argument('--log-path', nargs='?', type=str, default='runs_cubi/',
                         help='Path to log directory')
