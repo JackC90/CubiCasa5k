@@ -29,7 +29,7 @@ ENV HOME=/home/user
 RUN mkdir /home/user
 RUN chmod 777 /home/user
 
-# Install Miniconda and Python 3.6
+# Install Miniconda and Python 3.7
 ENV CONDA_AUTO_UPDATE_CONDA=false
 ENV PATH=/home/user/miniconda/bin:$PATH
 RUN curl -sLo ~/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-4.7.12.1-Linux-x86_64.sh \
@@ -83,6 +83,9 @@ CMD ["python3"]
 COPY requirements.txt /app/.
 
 RUN pip install -r requirements.txt --ignore-installed certifi==2018.10.15 --default-timeout=900
+
+# Debugger
+RUN pip install ipykernel
 
 ENV PROGRAM_PATH floorplan
 RUN mkdir -p ${HOME}/${PROGRAM_PATH}
