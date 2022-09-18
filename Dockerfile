@@ -84,9 +84,6 @@ COPY requirements.txt /app/.
 
 RUN pip install -r requirements.txt --ignore-installed certifi==2018.10.15 --default-timeout=900
 
-# Debugger
-RUN pip install ipykernel
-
 ENV PROGRAM_PATH floorplan
 RUN mkdir -p ${HOME}/${PROGRAM_PATH}
 
