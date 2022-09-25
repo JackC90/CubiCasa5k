@@ -97,3 +97,6 @@ Additional option for evaluation can be found in the script file. The results ca
 ```bash
 CUDA_LAUNCH_BLOCKING=1 python start.py
 ```
+
+## Errors
+python -m pip install ipykernel

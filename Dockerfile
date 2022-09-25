@@ -1,4 +1,4 @@
-FROM nvidia/cuda:9.2-base-ubuntu16.04
+FROM nvidia/cuda:10.2-base-ubuntu18.04
 
 # Refer to https://hub.docker.com/r/anibali/pytorch/dockerfile
 
@@ -9,11 +9,22 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     sudo \
     git \
+    gfortran \
     bzip2 \
+    libevent-dev \
+    libfreetype6-dev \
+    libxft-dev \
     libglib2.0-0 \
+    libx11-6 \
     libxext6 \
     libsm6 \
     libxrender1 \
+    libgeos-dev \
+    libfreetype6-dev \
+    libfontconfig1-dev \
+    xclip \
+    python3-dev \
+    libffi6 libffi-dev \
     mercurial \
     subversion \
     build-essential \
@@ -29,16 +40,18 @@ ENV HOME=/home/user
 RUN mkdir /home/user
 RUN chmod 777 /home/user
 
-# Install Miniconda and Python 3.7
+# Install Miniconda and Python 3.8
 ENV CONDA_AUTO_UPDATE_CONDA=false
 ENV PATH=/home/user/miniconda/bin:$PATH
-RUN curl -sLo ~/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-4.7.12.1-Linux-x86_64.sh \
+RUN curl -sLo ~/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-py38_4.8.2-Linux-x86_64.sh \
  && chmod +x ~/miniconda.sh \
  && ~/miniconda.sh -b -p ~/miniconda \
- && rm ~/miniconda.sh
+ && rm ~/miniconda.sh \
+ && conda install -y python==3.8.1 \
+ && conda clean -ya
 
-# Create a Python 3.6 environment
-# RUN /home/user/miniconda/bin/conda create -y --name py36 python=3.6.9 \
+# Create a Python 3.7 environment
+# RUN /home/user/miniconda/bin/conda create -y --name py37 python=3.6.9 \
 #  && /home/user/miniconda/bin/conda clean -ya
 # ENV CONDA_DEFAULT_ENV=py36
 # ENV CONDA_PREFIX=/home/user/miniconda/envs/$CONDA_DEFAULT_ENV
@@ -46,15 +59,19 @@ RUN curl -sLo ~/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-4.7.
 # RUN /home/user/miniconda/bin/conda install conda-build=3.18.9=py36_3 \
 #  && /home/user/miniconda/bin/conda clean -ya
 
-# # CUDA 9.2-specific steps
-# RUN conda install -y -c pytorch \
-#     cudatoolkit=9.2 \
-#     "pytorch=1.4.0=py3.6_cuda9.2.148_cudnn7.6.3_0" \
-#     "torchvision=0.5.0=py36_cu92" \
-#  && conda clean -ya
+RUN conda config --set unsatisfiable_hints True
+RUN conda config --add channels conda-forge
+# RUN conda config --set channel_priority strict
+
+# CUDA 10.2-specific steps
+RUN conda install -y -c pytorch \
+    cudatoolkit=10.2 \
+    "pytorch=1.5.0=py3.8_cuda10.2.89_cudnn7.6.5_0" \
+    "torchvision=0.6.0=py38_cu102" \
+ && conda clean -ya
 
 # Install HDF5 Python bindings
-RUN conda install -y h5py=2.8.0 \
+RUN conda install -y h5py=3.5.0 \
  && conda clean -ya
 RUN pip install h5py-cache==1.0
 
@@ -62,7 +79,7 @@ RUN pip install h5py-cache==1.0
 RUN pip install torchnet==0.0.4
 
 # Install Requests, a Python library for making HTTP requests
-RUN conda install -y requests=2.19.1 \
+RUN conda install -y requests=2.27.1 \
  && conda clean -ya
 
 # Install Graphviz
@@ -74,8 +91,10 @@ RUN sudo apt-get update && sudo apt-get install -y --no-install-recommends \
     libgtk2.0-0 \
     libcanberra-gtk-module \
  && sudo rm -rf /var/lib/apt/lists/*
-RUN conda install -y -c menpo opencv \
+RUN conda install libgcc-ng=11.2.0
+RUN conda install -y -c conda-forge opencv \
  && conda clean -ya
+
 
 # Set the default command to python3
 CMD ["python3"]
