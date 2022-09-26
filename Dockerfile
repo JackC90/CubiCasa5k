@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y \
     git \
     gfortran \
     bzip2 \
+    libgl1 \
     libevent-dev \
     libfreetype6-dev \
     libxft-dev \
@@ -95,13 +96,12 @@ RUN conda install libgcc-ng=11.2.0
 RUN conda install -y -c conda-forge opencv \
  && conda clean -ya
 
-
 # Set the default command to python3
 CMD ["python3"]
 
 COPY requirements.txt /app/.
 
-RUN pip install -r requirements.txt --ignore-installed certifi==2018.10.15 --default-timeout=900
+RUN python -m pip install -r requirements.txt --ignore-installed certifi==2018.10.15 --default-timeout=900
 
 ENV PROGRAM_PATH floorplan
 RUN mkdir -p ${HOME}/${PROGRAM_PATH}
