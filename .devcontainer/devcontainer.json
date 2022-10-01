@@ -1,7 +1,7 @@
 {
 	"workspaceFolder": "/home/user/floorplan",
 	"extensions": [
-		"ms-python.python@2022.8.1",
+		"ms-python.python",
 		"ms-python.vscode-pylance",
 		"ms-toolsai.jupyter",
 		"ms-toolsai.jupyter-keymap",
