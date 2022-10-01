@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.5.1-base-ubuntu20.04
+FROM nvidia/cuda:11.6.1-base-ubuntu20.04
 
 # Refer to https://hub.docker.com/r/anibali/pytorch/dockerfile
 
@@ -69,7 +69,7 @@ CMD ["python3"]
 
 COPY requirements.txt /app/.
 
-RUN python -m pip install -r requirements.txt --ignore-installed certifi==2018.10.15 --default-timeout=900
+RUN python -m pip install -r requirements.txt --default-timeout=900
 
 ENV PROGRAM_PATH floorplan
 RUN mkdir -p ${HOME}/${PROGRAM_PATH}

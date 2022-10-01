@@ -2,7 +2,6 @@ asn1crypto==1.5.1
 attrs==22.1.0
 backcall==0.2.0
 bleach==5.0.1
-certifi==2018.10.15
 chardet==5.0.0
 cloudpickle==2.2.0
 cryptography==38.0.1
