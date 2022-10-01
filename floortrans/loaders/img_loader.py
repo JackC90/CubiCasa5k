@@ -1,3 +1,4 @@
+import os
 import lmdb
 import pickle
 import torch
@@ -51,6 +52,7 @@ class ImageLoader(Dataset):
         return sample
 
     def get_txt(self, index):
+        item_id = os.path.basename(os.path.normpath(self.folders[index]))
         image_file_name_check = glob.glob(self.data_folder + self.folders[index] + self.image_file_name)
         image_file_name = image_file_name_check[0] if image_file_name_check else None
         fplan = cv2.imread(image_file_name)
@@ -73,7 +75,7 @@ class ImageLoader(Dataset):
 
         img = torch.tensor(fplan.astype(np.float32))
 
-        sample = {'image': img, 'folder': self.folders[index], 'scale': coef_width, 'height': height_org, 'width': width_org}
+        sample = { 'item_id': item_id, 'image': img, 'folder': self.folders[index], 'scale': coef_width, 'height': height_org, 'width': width_org}
 
         return sample
 
