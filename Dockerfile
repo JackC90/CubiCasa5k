@@ -64,6 +64,12 @@ RUN curl -sLo ~/mambaforge.sh https://github.com/conda-forge/miniforge/releases/
  && rm /app/environment.yml \
  && mamba clean -ya
 
+RUN conda install \
+ 'pytorch=1.12.1=py3.9_cuda11.6_cudnn8.3.2_0' \
+ 'torchvision=0.13.1=py39_cu116' \
+ -c pytorch \
+ && conda clean -ya
+
 # Set the default command to python3
 CMD ["python3"]
 
