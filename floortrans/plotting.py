@@ -584,13 +584,13 @@ def plot_pre_rec_4(instances, classes):
 def discrete_cmap():
     """create a colormap with N (N<15) discrete colors and register it"""
     # define individual colors as hex values
-    cpool = ['#DCDCDC', '#b3de69', '#000000', '#8dd3c7', '#fdb462',
+    cpool = ['#00000000', '#b3de69', '#000000', '#8dd3c7', '#fdb462',
              '#fccde5', '#80b1d3', '#808080', '#fb8072', '#696969',
              '#577a4d', '#ffffb3']
     cmap3 = colors.ListedColormap(cpool, 'rooms')
     cm.register_cmap(cmap=cmap3, override_builtin=True)
 
-    cpool = ['#DCDCDC', '#8dd3c7', '#b15928', '#fdb462', '#ffff99',
+    cpool = ['#00000000', '#8dd3c7', '#b15928', '#fdb462', '#ffff99',
              '#fccde5', '#80b1d3', '#808080', '#fb8072', '#696969',
              '#577a4d']
     cmap3 = colors.ListedColormap(cpool, 'icons')
