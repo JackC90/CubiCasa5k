@@ -14,14 +14,19 @@ RUN apt-get update && apt-get install -y \
     curl \
     ca-certificates \
     sudo \
+    autoremove \
     git \
     gfortran \
     bzip2 \
+    dos2unix \
     libgl1 \
+    libgl1-mesa-dev \
+	libglu1-mesa \
     libevent-dev \
     libfreetype6-dev \
     libxft-dev \
     libglib2.0-0 \
+    libxi6 \
     libx11-6 \
     libxext6 \
     libsm6 \
@@ -29,7 +34,9 @@ RUN apt-get update && apt-get install -y \
     libgeos-dev \
     libfreetype6-dev \
     libfontconfig1-dev \
+    software-properties-common \
     xclip \
+    xz-utils \
     python3-dev \
     libffi7 libffi-dev \
     mercurial \
@@ -69,6 +76,17 @@ RUN conda install \
  'torchvision=0.13.1=py39_cu116' \
  -c pytorch \
  && conda clean -ya
+
+# Install blender
+ENV BLENDER_PATH /usr/local/blender/blender
+ENV BLENDER_MAJOR 2.93
+ENV BLENDER_VERSION 2.93.0
+ENV BLENDER_BZ2_URL https://mirror.clarkson.edu/blender/release/Blender$BLENDER_MAJOR/blender-$BLENDER_VERSION-linux-x64.tar.xz
+
+RUN mkdir /usr/local/blender && \
+	curl -SL "$BLENDER_BZ2_URL" -o blender.tar.xz && \
+	tar -xf blender.tar.xz -C /usr/local/blender --strip-components=1 && \
+	rm blender.tar.xz
 
 # Set the default command to python3
 CMD ["python3"]
