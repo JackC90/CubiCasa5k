@@ -16,3 +16,5 @@ __pycache__/
 *.pkl
 
 op.py
+
+.env

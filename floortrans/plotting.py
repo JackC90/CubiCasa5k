@@ -5,6 +5,7 @@ import numpy as np
 import torch
 from skimage import draw
 from shapely.geometry import Polygon, Point
+import codecs, json
 
 
 def discrete_cmap_furukawa():
@@ -798,3 +799,22 @@ def shp_mask(shp, x, y, m=None):
                 2:] = shp_mask(shp, x[l // 2:], y[k // 2:], m[k // 2:, l // 2:])
 
     return m
+
+def _convert_np_float(val):
+    if isinstance(val, np.floating) or isinstance(val, np.integer):
+        return val.item()
+    return val
+
+def polygons_to_json(filepath, polygons, types, room_polygons, room_types):
+    """
+    Transform polygons to JSON and saves them to a file 
+    """
+    dictionary = {
+      "polygons": polygons.tolist(),
+      "types": types,
+      "room_polygons": list(map(lambda p : p.__geo_interface__, room_polygons)),
+      "room_types": room_types
+    }
+
+    json.dump(dictionary, codecs.open(filepath, 'w', encoding='utf-8'), separators=(',', ':'), default=_convert_np_float)
+    return dictionary
