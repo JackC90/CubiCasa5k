@@ -1,6 +1,10 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 from skimage import transform
 import numpy as np
 import logging
+import os
 
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
@@ -9,7 +13,7 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from floortrans.models import get_model
 from floortrans.loaders import ImageLoader, FloorplanSVG, DictToTensor, Compose, RotateNTurns
-from floortrans.plotting import segmentation_plot, polygons_to_image, draw_junction_from_dict, discrete_cmap
+from floortrans.plotting import segmentation_plot, polygons_to_image, polygons_to_json, draw_junction_from_dict, discrete_cmap
 discrete_cmap()
 from floortrans.post_prosessing import split_prediction, get_polygons, split_validation
 from floortrans.metrics import get_evaluation_tensors, runningScore
@@ -17,8 +21,9 @@ from tqdm import tqdm
 
 from mpl_toolkits.axes_grid1 import AxesGrid
 from IPython.display import Image
-from IPython.core.display import HTML 
+from IPython.core.display import HTML
 
+from Blender.blender_actions import generate_3d
 
 rot = RotateNTurns()
 room_classes = ["Background", "Outdoor", "Wall", "Kitchen", "Living Room" ,"Bed Room", "Bath", "Entry", "Railing", "Storage", "Garage", "Undefined"]
@@ -29,6 +34,7 @@ data_file = 'test.txt'
 normal_set = ImageLoader(data_folder, data_file, format='txt', original_size=True)
 data_loader = DataLoader(normal_set, batch_size=1, num_workers=0)
 data_iter = iter(data_loader)
+
 # Setup Model
 model = get_model('hg_furukawa_original', 51)
 n_classes = 44
@@ -43,7 +49,6 @@ model.load_state_dict(checkpoint['model_state'])
 model.eval()
 model.cuda()
 print("Model loaded.")
-
 
 # Logger
 logger = logging.getLogger('eval')
@@ -63,6 +68,7 @@ with torch.no_grad():
   for count, val in tqdm(enumerate(data_loader), total=len(data_loader),
                           ncols=80, leave=False):
     logger.info(count)
+    item_id = val['item_id'][0]
     folder = val['folder'][0]
     image = val['image']
     images_val = val['image'].cuda()
@@ -99,14 +105,29 @@ with torch.no_grad():
     # Post-processing
     heatmaps, rooms, icons = split_prediction(prediction, img_size, split)
     polygons, types, room_polygons, room_types = get_polygons((heatmaps, rooms, icons), 0.2, [1, 2])
+    
+    # File directory
+    dir = os.path.join('data', 'output', '%s' % (item_id,))
+    # Convert to 3D
 
+
+    generate_3d(dir, item_id, polygons, types, room_polygons, room_types)
+
+    # Convert to images
     pol_room_seg, pol_icon_seg = polygons_to_image(polygons, types, room_polygons,  room_types, height, width)
+
+    is_exist = os.path.exists(dir)
+    if not is_exist:
+      os.mkdir(dir)
+    
+    # Plot figures
     plt.figure(figsize=(12,12))
     ax = plt.subplot(1, 1, 1)
     ax.axis('off')
+    ## Rooms
     rseg = ax.imshow(pol_room_seg, cmap='rooms', vmin=0, vmax=n_rooms-0.1)
+    
+    # Icons
     iseg = ax.imshow(pol_icon_seg, cmap='icons', vmin=0, vmax=n_icons-0.1)
-    # cbar = plt.colorbar(rseg, ticks=np.arange(n_rooms) + 0.5, fraction=0.046, pad=0.01)
-    # cbar.ax.set_yticklabels(room_classes, fontsize=20)
-    plt.tight_layout()
-    plt.savefig(folder, format="svg")
+
+    plt.show()

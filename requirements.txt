@@ -54,9 +54,11 @@ protobuf==3.20.1
 ptyprocess==0.7.0
 pycparser==2.19
 pyfiglet==0.7
+pygltflib==1.15.3
 Pygments==2.4.1
 pyOpenSSL==22.1.0
 pyparsing==3.0.9
+pyrender==0.1.45
 pyrsistent==0.18.1
 PySocks==1.7.1
 pytest==7.0.1
