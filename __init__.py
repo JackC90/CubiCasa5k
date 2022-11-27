@@ -6,35 +6,6 @@ import math
 import os.path
 from operator import itemgetter
 
-"""
-Floorplan to Blender
-
-FloorplanToBlender3d
-Copyright (C) 2021 Daniel Westberg
-
-This code read data from a file and creates a 3d model of that data.
-RUN THIS CODE FROM BLENDER
-
-The new implementation starts blender and executes this script in a new project
-so tutorial below can be ignored if you don't want to do this manually in blender.
-
-HOW TO: (old style)
-
-1. Run create script to create data files for your floorplan image.
-2. Edit path in this file to generated data files.
-3. Start blender
-4. Open Blender text editor
-5. Open this file "alt+o"
-6. Run script
-
-This code is tested on Windows 10, Blender 2.93, in December 2021.
-"""
-
-"""
-Our helpful functions
-"""
-
-
 def init_object(name):
     # Create new blender object and return references to mesh and object
     mymesh = bpy.data.meshes.new(name)
@@ -42,33 +13,34 @@ def init_object(name):
     bpy.context.collection.objects.link(myobject)
     return myobject, mymesh
 
+def create_mat(rgb_color):
+    mat = bpy.data.materials.new(name="MaterialName")  # set new material to variable
+    mat.diffuse_color = rgb_color if rgb_color else (255,255,255)
+    return mat
 
 def average(lst):
     return sum(lst) / len(lst)
-
 
 def get_mesh_center(verts):
     # Calculate center location of a mesh from verts
     x = []
     y = []
     z = []
-
+    
     for vert in verts:
         x.append(vert[0])
         y.append(vert[1])
         z.append(vert[2])
-
     return [average(x), average(y), average(z)]
-
-
+        
+        
 def subtract_center_verts(verts1, verts2):
     # Remove verts1 from all verts in verts2, return result, verts1 & verts2 must have same shape!
     for i in range(0, len(verts2)):
         verts2[i][0] -= verts1[0]
         verts2[i][1] -= verts1[1]
         verts2[i][2] -= verts1[2]
-    return verts2
-
+    return verts2                                                                                                                                                                                                                         
 
 def create_custom_mesh(objname, verts, faces, mat=None, cen=None):
     """
@@ -82,6 +54,7 @@ def create_custom_mesh(objname, verts, faces, mat=None, cen=None):
 
     # Rearrange verts to put pivot point in center of mesh
     # Find center of verts
+    print(verts)
     center = get_mesh_center(verts)
     # Subtract center from verts before creation
     proper_verts = subtract_center_verts(center, verts)
@@ -110,49 +83,6 @@ def create_custom_mesh(objname, verts, faces, mat=None, cen=None):
     return myobject
 
 
-def create_mat(rgb_color):
-    mat = bpy.data.materials.new(name="MaterialName")  # set new material to variable
-    mat.diffuse_color = rgb_color  # change to random color
-    return mat
-
-
-"""
-Main functionality here!
-"""
-
-
-def main(argv):
-
-    # Remove starting object cube
-    objs = bpy.data.objects
-    
-    if "Cube" in objs:
-        objs.remove(objs["Cube"], do_unlink=True)
-
-#    if len(argv) > 0:  # Note YOU need 8 arguments!
-#        program_path = argv[0]
-#        target = argv[1]
-#    else:
-#        exit(0)
-
-    """
-    Instantiate
-    Each argument after 7 will be a floorplan path
-    """
-#    for i in range(7, len(argv)):
-    params = create_floorplan()
-
-    """
-    Save to file
-    TODO add several save modes here!
-    """
-    bpy.ops.wm.save_as_mainfile(filepath="%s/%s.blend" %("C:/Users/JackChua/Projects/Floorplan/CubiCasa5k/data/output/example/", params["id"]))  # "/floorplan.blend"
-
-    """
-    Send correct exit code
-    """
-#    exit(0)
-
 
 def create_floorplan():
     """
@@ -166,18 +96,6 @@ def create_floorplan():
     id, polygons, types, room_polygons, room_types = itemgetter('id', 'polygons', 'types', 'room_polygons', 'room_types')(params)
     
     parent, _ = init_object("Floorplan" + str(id))
-
-
-#    rot = transform["rotation"]
-#    pos = transform["position"]
-#    scale = transform["scale"]
-
-    # Calculate and move floorplan shape to center
-#    cen = transform["shape"]
-
-    # Where data is stored, if shared between floorplans
-#    path_to_data = transform["origin_path"]
-
     # Set Cursor start
     bpy.context.scene.cursor.location = (0, 0, 0)
 
@@ -185,293 +103,80 @@ def create_floorplan():
     Create Walls
     """
     wall_horizontal_verts = [[[7.26, 5.37, 1], [7.26, 5.71, 1], [8.74, 5.71, 1], [8.74, 5.37, 1]], [[7.26, 5.37, 0], [7.26, 5.71, 0], [8.74, 5.71, 0], [8.74, 5.37, 0]], [[5.44, 5.37, 1], [5.44, 5.71, 1], [6.11, 5.71, 1], [6.11, 5.37, 1]], [[5.44, 5.37, 0], [5.44, 5.71, 0], [6.11, 5.71, 0], [6.11, 5.37, 0]], [[4.23, 5.37, 1], [4.23, 5.71, 1], [4.89, 5.71, 1], [4.89, 5.37, 1]], [[4.23, 5.37, 0], [4.23, 5.71, 0], [4.89, 5.71, 0], [4.89, 5.37, 0]], [[3.08, 5.71, 1], [3.08, 5.37, 1], [2.54, 5.37, 1], [2.53, 5.36, 1], [2.53, 5.17, 1], [2.19, 5.17, 1], [2.19, 5.4, 1], [2.18, 5.41, 1], [0.91, 5.41, 1], [0.91, 5.51, 1], [2.18, 5.51, 1], [2.19, 5.52, 1], [2.19, 5.71, 1]], [[3.08, 5.71, 0], [3.08, 5.37, 0], [2.54, 5.37, 0], [2.53, 5.36, 0], [2.53, 5.17, 0], [2.19, 5.17, 0], [2.19, 5.4, 0], [2.18, 5.41, 0], [0.91, 5.41, 0], [0.91, 5.51, 0], [2.18, 5.51, 0], [2.19, 5.52, 0], [2.19, 5.71, 0]], [[2.19, 3.74, 1], [2.19, 4.02, 1], [2.53, 4.02, 1], [2.53, 3.74, 1]], [[2.19, 3.74, 0], [2.19, 4.02, 0], [2.53, 4.02, 0], [2.53, 3.74, 0]], [[7.68, 3.23, 1], [7.68, 3.89, 1], [9.08, 3.89, 1], [9.08, 3.27, 1], [9.07, 3.26, 1], [9.07, 3.23, 1], [8.95, 3.23, 1], [8.95, 3.62, 1], [8.94, 3.63, 1], [7.81, 3.63, 1], [7.8, 3.62, 1], [7.8, 3.23, 1]], [[7.68, 3.23, 0], [7.68, 3.89, 0], [9.08, 3.89, 0], [9.08, 3.27, 0], [9.07, 3.26, 0], [9.07, 3.23, 0], [8.95, 3.23, 0], [8.95, 3.62, 0], [8.94, 3.63, 0], [7.81, 3.63, 0], [7.8, 3.62, 0], [7.8, 3.23, 0]], [[10.68, 3.16, 1], [10.42, 3.16, 1], [10.42, 3.62, 1], [10.41, 3.63, 1], [9.69, 3.63, 1], [9.69, 3.76, 1], [10.41, 3.76, 1], [10.42, 3.77, 1], [10.42, 5.36, 1], [10.41, 5.37, 1], [9.69, 5.37, 1], [9.69, 5.71, 1], [10.62, 5.71, 1], [10.61, 3.78, 1], [10.63, 3.76, 1], [10.69, 3.76, 1]], [[10.68, 3.16, 0], [10.42, 3.16, 0], [10.42, 3.62, 0], [10.41, 3.63, 0], [9.69, 3.63, 0], [9.69, 3.76, 0], [10.41, 3.76, 0], [10.42, 3.77, 0], [10.42, 5.36, 0], [10.41, 5.37, 0], [9.69, 5.37, 0], [9.69, 5.71, 0], [10.62, 5.71, 0], [10.61, 3.78, 0], [10.63, 3.76, 0], [10.69, 3.76, 0]], [[0.91, 2.56, 1], [0.91, 2.67, 1], [1.02, 2.67, 1], [1.03, 2.66, 1], [2.18, 2.66, 1], [2.19, 2.67, 1], [2.19, 3.13, 1], [2.53, 3.13, 1], [2.54, 3.06, 1], [4.35, 3.06, 1], [4.35, 2.93, 1], [2.54, 2.93, 1], [2.53, 2.92, 1], [2.53, 2.26, 1], [2.19, 2.26, 1], [2.19, 2.55, 1], [2.18, 2.56, 1]], [[0.91, 2.56, 0], [0.91, 2.67, 0], [1.02, 2.67, 0], [1.03, 2.66, 0], [2.18, 2.66, 0], [2.19, 2.67, 0], [2.19, 3.13, 0], [2.53, 3.13, 0], [2.54, 3.06, 0], [4.35, 3.06, 0], [4.35, 2.93, 0], [2.54, 2.93, 0], [2.53, 2.92, 0], [2.53, 2.26, 0], [2.19, 2.26, 0], [2.19, 2.55, 0], [2.18, 2.56, 0]], [[3.16, 0.65, 1], [3.16, 0.99, 1], [5.35, 1.0, 1], [5.35, 2.92, 1], [4.9, 2.93, 1], [4.9, 3.06, 1], [5.48, 3.06, 1], [5.48, 2.47, 1], [5.73, 2.46, 1], [5.73, 2.33, 1], [5.61, 2.32, 1], [5.62, 0.99, 1], [6.56, 1.0, 1], [6.56, 2.32, 1], [6.28, 2.33, 1], [6.28, 2.46, 1], [7.46, 2.46, 1], [7.46, 2.33, 1], [6.7, 2.32, 1], [6.71, 0.99, 1], [8.57, 0.99, 1], [8.58, 2.32, 1], [8.01, 2.33, 1], [8.01, 2.46, 1], [10.41, 2.46, 1], [10.42, 2.55, 1], [10.68, 2.55, 1], [10.68, 2.21, 1], [8.84, 2.2, 1], [8.83, 0.73, 1], [4.22, 0.72, 1], [4.21, 0.65, 1]], [[3.16, 0.65, 0], [3.16, 0.99, 0], [5.35, 1.0, 0], [5.35, 2.92, 0], [4.9, 2.93, 0], [4.9, 3.06, 0], [5.48, 3.06, 0], [5.48, 2.47, 0], [5.73, 2.46, 0], [5.73, 2.33, 0], [5.61, 2.32, 0], [5.62, 0.99, 0], [6.56, 1.0, 0], [6.56, 2.32, 0], [6.28, 2.33, 0], [6.28, 2.46, 0], [7.46, 2.46, 0], [7.46, 2.33, 0], [6.7, 2.32, 0], [6.71, 0.99, 0], [8.57, 0.99, 0], [8.58, 2.32, 0], [8.01, 2.33, 0], [8.01, 2.46, 0], [10.41, 2.46, 0], [10.42, 2.55, 0], [10.68, 2.55, 0], [10.68, 2.21, 0], [8.84, 2.2, 0], [8.83, 0.73, 0], [4.22, 0.72, 0], [4.21, 0.65, 0]], [[2.19, 0.65, 1], [2.19, 1.72, 1], [2.53, 1.72, 1], [2.53, 1.0, 1], [2.54, 0.99, 1], [2.61, 0.99, 1], [2.61, 0.65, 1]], [[2.19, 0.65, 0], [2.19, 1.72, 0], [2.53, 1.72, 0], [2.53, 1.0, 0], [2.54, 0.99, 0], [2.61, 0.99, 0], [2.61, 0.65, 0]]]
-    wall_horizontal_faces = [[[0, 1, 2, 3]], [[0, 1, 2, 3]], [[0, 1, 2, 3]], [[0, 1, 2, 3]], [[0, 1, 2, 3]], [[0, 1, 2, 3]], [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]], [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]], [[0, 1, 2, 3]], [[0, 1, 2, 3]], [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]], [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]], [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]], [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]], [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]], [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]], [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]], [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]], [[0, 1, 2, 3, 4, 5, 6]], [[0, 1, 2, 3, 4, 5, 6]]]
     
+    wall_horizontal_faces = [[[0, 1, 2, 3]], [[0, 1, 2, 3]], [[0, 1, 2, 3]], [[0, 1, 2, 3]], [[0, 1, 2, 3]], [[0, 1, 2, 3]], [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]], [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]], [[0, 1, 2, 3]], [[0, 1, 2, 3]], [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]], [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]], [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]], [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]], [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]], [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]], [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]], [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]], [[0, 1, 2, 3, 4, 5, 6]], [[0, 1, 2, 3, 4, 5, 6]]]
+
+    
+    wall_vertical_verts = [[[[7.26, 5.37, 0], [7.26, 5.37, 1], [7.26, 5.71, 0], [7.26, 5.71, 1]], [[7.26, 5.71, 0], [7.26, 5.71, 1], [8.74, 5.71, 0], [8.74, 5.71, 1]], [[8.74, 5.71, 0], [8.74, 5.71, 1], [8.74, 5.37, 0], [8.74, 5.37, 1]], [[8.74, 5.37, 0], [8.74, 5.37, 1], [7.26, 5.37, 0], [7.26, 5.37, 1]]], [[[5.44, 5.37, 0], [5.44, 5.37, 1], [5.44, 5.71, 0], [5.44, 5.71, 1]], [[5.44, 5.71, 0], [5.44, 5.71, 1], [6.11, 5.71, 0], [6.11, 5.71, 1]], [[6.11, 5.71, 0], [6.11, 5.71, 1], [6.11, 5.37, 0], [6.11, 5.37, 1]], [[6.11, 5.37, 0], [6.11, 5.37, 1], [5.44, 5.37, 0], [5.44, 5.37, 1]]], [[[4.23, 5.37, 0], [4.23, 5.37, 1], [4.23, 5.71, 0], [4.23, 5.71, 1]], [[4.23, 5.71, 0], [4.23, 5.71, 1], [4.89, 5.71, 0], [4.89, 5.71, 1]], [[4.89, 5.71, 0], [4.89, 5.71, 1], [4.89, 5.37, 0], [4.89, 5.37, 1]], [[4.89, 5.37, 0], [4.89, 5.37, 1], [4.23, 5.37, 0], [4.23, 5.37, 1]]], [[[3.08, 5.71, 0], [3.08, 5.71, 1], [3.08, 5.37, 0], [3.08, 5.37, 1]], [[3.08, 5.37, 0], [3.08, 5.37, 1], [2.54, 5.37, 0], [2.54, 5.37, 1]], [[2.54, 5.37, 0], [2.54, 5.37, 1], [2.53, 5.36, 0], [2.53, 5.36, 1]], [[2.53, 5.36, 0], [2.53, 5.36, 1], [2.53, 5.17, 0], [2.53, 5.17, 1]], [[2.53, 5.17, 0], [2.53, 5.17, 1], [2.19, 5.17, 0], [2.19, 5.17, 1]], [[2.19, 5.17, 0], [2.19, 5.17, 1], [2.19, 5.4, 0], [2.19, 5.4, 1]], [[2.19, 5.4, 0], [2.19, 5.4, 1], [2.18, 5.41, 0], [2.18, 5.41, 1]], [[2.18, 5.41, 0], [2.18, 5.41, 1], [0.91, 5.41, 0], [0.91, 5.41, 1]], [[0.91, 5.41, 0], [0.91, 5.41, 1], [0.91, 5.51, 0], [0.91, 5.51, 1]], [[0.91, 5.51, 0], [0.91, 5.51, 1], [2.18, 5.51, 0], [2.18, 5.51, 1]], [[2.18, 5.51, 0], [2.18, 5.51, 1], [2.19, 5.52, 0], [2.19, 5.52, 1]], [[2.19, 5.52, 0], [2.19, 5.52, 1], [2.19, 5.71, 0], [2.19, 5.71, 1]], [[2.19, 5.71, 0], [2.19, 5.71, 1], [3.08, 5.71, 0], [3.08, 5.71, 1]]], [[[2.19, 3.74, 0], [2.19, 3.74, 1], [2.19, 4.02, 0], [2.19, 4.02, 1]], [[2.19, 4.02, 0], [2.19, 4.02, 1], [2.53, 4.02, 0], [2.53, 4.02, 1]], [[2.53, 4.02, 0], [2.53, 4.02, 1], [2.53, 3.74, 0], [2.53, 3.74, 1]], [[2.53, 3.74, 0], [2.53, 3.74, 1], [2.19, 3.74, 0], [2.19, 3.74, 1]]], [[[7.68, 3.23, 0], [7.68, 3.23, 1], [7.68, 3.89, 0], [7.68, 3.89, 1]], [[7.68, 3.89, 0], [7.68, 3.89, 1], [9.08, 3.89, 0], [9.08, 3.89, 1]], [[9.08, 3.89, 0], [9.08, 3.89, 1], [9.08, 3.27, 0], [9.08, 3.27, 1]], [[9.08, 3.27, 0], [9.08, 3.27, 1], [9.07, 3.26, 0], [9.07, 3.26, 1]], [[9.07, 3.26, 0], [9.07, 3.26, 1], [9.07, 3.23, 0], [9.07, 3.23, 1]], [[9.07, 3.23, 0], [9.07, 3.23, 1], [8.95, 3.23, 0], [8.95, 3.23, 1]], [[8.95, 3.23, 0], [8.95, 3.23, 1], [8.95, 3.62, 0], [8.95, 3.62, 1]], [[8.95, 3.62, 0], [8.95, 3.62, 1], [8.94, 3.63, 0], [8.94, 3.63, 1]], [[8.94, 3.63, 0], [8.94, 3.63, 1], [7.81, 3.63, 0], [7.81, 3.63, 1]], [[7.81, 3.63, 0], [7.81, 3.63, 1], [7.8, 3.62, 0], [7.8, 3.62, 1]], [[7.8, 3.62, 0], [7.8, 3.62, 1], [7.8, 3.23, 0], [7.8, 3.23, 1]], [[7.8, 3.23, 0], [7.8, 3.23, 1], [7.68, 3.23, 0], [7.68, 3.23, 1]]], [[[10.68, 3.16, 0], [10.68, 3.16, 1], [10.42, 3.16, 0], [10.42, 3.16, 1]], [[10.42, 3.16, 0], [10.42, 3.16, 1], [10.42, 3.62, 0], [10.42, 3.62, 1]], [[10.42, 3.62, 0], [10.42, 3.62, 1], [10.41, 3.63, 0], [10.41, 3.63, 1]], [[10.41, 3.63, 0], [10.41, 3.63, 1], [9.69, 3.63, 0], [9.69, 3.63, 1]], [[9.69, 3.63, 0], [9.69, 3.63, 1], [9.69, 3.76, 0], [9.69, 3.76, 1]], [[9.69, 3.76, 0], [9.69, 3.76, 1], [10.41, 3.76, 0], [10.41, 3.76, 1]], [[10.41, 3.76, 0], [10.41, 3.76, 1], [10.42, 3.77, 0], [10.42, 3.77, 1]], [[10.42, 3.77, 0], [10.42, 3.77, 1], [10.42, 5.36, 0], [10.42, 5.36, 1]], [[10.42, 5.36, 0], [10.42, 5.36, 1], [10.41, 5.37, 0], [10.41, 5.37, 1]], [[10.41, 5.37, 0], [10.41, 5.37, 1], [9.69, 5.37, 0], [9.69, 5.37, 1]], [[9.69, 5.37, 0], [9.69, 5.37, 1], [9.69, 5.71, 0], [9.69, 5.71, 1]], [[9.69, 5.71, 0], [9.69, 5.71, 1], [10.62, 5.71, 0], [10.62, 5.71, 1]], [[10.62, 5.71, 0], [10.62, 5.71, 1], [10.61, 3.78, 0], [10.61, 3.78, 1]], [[10.61, 3.78, 0], [10.61, 3.78, 1], [10.63, 3.76, 0], [10.63, 3.76, 1]], [[10.63, 3.76, 0], [10.63, 3.76, 1], [10.69, 3.76, 0], [10.69, 3.76, 1]], [[10.69, 3.76, 0], [10.69, 3.76, 1], [10.68, 3.16, 0], [10.68, 3.16, 1]]], [[[0.91, 2.56, 0], [0.91, 2.56, 1], [0.91, 2.67, 0], [0.91, 2.67, 1]], [[0.91, 2.67, 0], [0.91, 2.67, 1], [1.02, 2.67, 0], [1.02, 2.67, 1]], [[1.02, 2.67, 0], [1.02, 2.67, 1], [1.03, 2.66, 0], [1.03, 2.66, 1]], [[1.03, 2.66, 0], [1.03, 2.66, 1], [2.18, 2.66, 0], [2.18, 2.66, 1]], [[2.18, 2.66, 0], [2.18, 2.66, 1], [2.19, 2.67, 0], [2.19, 2.67, 1]], [[2.19, 2.67, 0], [2.19, 2.67, 1], [2.19, 3.13, 0], [2.19, 3.13, 1]], [[2.19, 3.13, 0], [2.19, 3.13, 1], [2.53, 3.13, 0], [2.53, 3.13, 1]], [[2.53, 3.13, 0], [2.53, 3.13, 1], [2.54, 3.06, 0], [2.54, 3.06, 1]], [[2.54, 3.06, 0], [2.54, 3.06, 1], [4.35, 3.06, 0], [4.35, 3.06, 1]], [[4.35, 3.06, 0], [4.35, 3.06, 1], [4.35, 2.93, 0], [4.35, 2.93, 1]], [[4.35, 2.93, 0], [4.35, 2.93, 1], [2.54, 2.93, 0], [2.54, 2.93, 1]], [[2.54, 2.93, 0], [2.54, 2.93, 1], [2.53, 2.92, 0], [2.53, 2.92, 1]], [[2.53, 2.92, 0], [2.53, 2.92, 1], [2.53, 2.26, 0], [2.53, 2.26, 1]], [[2.53, 2.26, 0], [2.53, 2.26, 1], [2.19, 2.26, 0], [2.19, 2.26, 1]], [[2.19, 2.26, 0], [2.19, 2.26, 1], [2.19, 2.55, 0], [2.19, 2.55, 1]], [[2.19, 2.55, 0], [2.19, 2.55, 1], [2.18, 2.56, 0], [2.18, 2.56, 1]], [[2.18, 2.56, 0], [2.18, 2.56, 1], [0.91, 2.56, 0], [0.91, 2.56, 1]]], [[[3.16, 0.65, 0], [3.16, 0.65, 1], [3.16, 0.99, 0], [3.16, 0.99, 1]], [[3.16, 0.99, 0], [3.16, 0.99, 1], [5.35, 1.0, 0], [5.35, 1.0, 1]], [[5.35, 1.0, 0], [5.35, 1.0, 1], [5.35, 2.92, 0], [5.35, 2.92, 1]], [[5.35, 2.92, 0], [5.35, 2.92, 1], [4.9, 2.93, 0], [4.9, 2.93, 1]], [[4.9, 2.93, 0], [4.9, 2.93, 1], [4.9, 3.06, 0], [4.9, 3.06, 1]], [[4.9, 3.06, 0], [4.9, 3.06, 1], [5.48, 3.06, 0], [5.48, 3.06, 1]], [[5.48, 3.06, 0], [5.48, 3.06, 1], [5.48, 2.47, 0], [5.48, 2.47, 1]], [[5.48, 2.47, 0], [5.48, 2.47, 1], [5.73, 2.46, 0], [5.73, 2.46, 1]], [[5.73, 2.46, 0], [5.73, 2.46, 1], [5.73, 2.33, 0], [5.73, 2.33, 1]], [[5.73, 2.33, 0], [5.73, 2.33, 1], [5.61, 2.32, 0], [5.61, 2.32, 1]], [[5.61, 2.32, 0], [5.61, 2.32, 1], [5.62, 0.99, 0], [5.62, 0.99, 1]], [[5.62, 0.99, 0], [5.62, 0.99, 1], [6.56, 1.0, 0], [6.56, 1.0, 1]], [[6.56, 1.0, 0], [6.56, 1.0, 1], [6.56, 2.32, 0], [6.56, 2.32, 1]], [[6.56, 2.32, 0], [6.56, 2.32, 1], [6.28, 2.33, 0], [6.28, 2.33, 1]], [[6.28, 2.33, 0], [6.28, 2.33, 1], [6.28, 2.46, 0], [6.28, 2.46, 1]], [[6.28, 2.46, 0], [6.28, 2.46, 1], [7.46, 2.46, 0], [7.46, 2.46, 1]], [[7.46, 2.46, 0], [7.46, 2.46, 1], [7.46, 2.33, 0], [7.46, 2.33, 1]], [[7.46, 2.33, 0], [7.46, 2.33, 1], [6.7, 2.32, 0], [6.7, 2.32, 1]], [[6.7, 2.32, 0], [6.7, 2.32, 1], [6.71, 0.99, 0], [6.71, 0.99, 1]], [[6.71, 0.99, 0], [6.71, 0.99, 1], [8.57, 0.99, 0], [8.57, 0.99, 1]], [[8.57, 0.99, 0], [8.57, 0.99, 1], [8.58, 2.32, 0], [8.58, 2.32, 1]], [[8.58, 2.32, 0], [8.58, 2.32, 1], [8.01, 2.33, 0], [8.01, 2.33, 1]], [[8.01, 2.33, 0], [8.01, 2.33, 1], [8.01, 2.46, 0], [8.01, 2.46, 1]], [[8.01, 2.46, 0], [8.01, 2.46, 1], [10.41, 2.46, 0], [10.41, 2.46, 1]], [[10.41, 2.46, 0], [10.41, 2.46, 1], [10.42, 2.55, 0], [10.42, 2.55, 1]], [[10.42, 2.55, 0], [10.42, 2.55, 1], [10.68, 2.55, 0], [10.68, 2.55, 1]], [[10.68, 2.55, 0], [10.68, 2.55, 1], [10.68, 2.21, 0], [10.68, 2.21, 1]], [[10.68, 2.21, 0], [10.68, 2.21, 1], [8.84, 2.2, 0], [8.84, 2.2, 1]], [[8.84, 2.2, 0], [8.84, 2.2, 1], [8.83, 0.73, 0], [8.83, 0.73, 1]], [[8.83, 0.73, 0], [8.83, 0.73, 1], [4.22, 0.72, 0], [4.22, 0.72, 1]], [[4.22, 0.72, 0], [4.22, 0.72, 1], [4.21, 0.65, 0], [4.21, 0.65, 1]], [[4.21, 0.65, 0], [4.21, 0.65, 1], [3.16, 0.65, 0], [3.16, 0.65, 1]]], [[[2.19, 0.65, 0], [2.19, 0.65, 1], [2.19, 1.72, 0], [2.19, 1.72, 1]], [[2.19, 1.72, 0], [2.19, 1.72, 1], [2.53, 1.72, 0], [2.53, 1.72, 1]], [[2.53, 1.72, 0], [2.53, 1.72, 1], [2.53, 1.0, 0], [2.53, 1.0, 1]], [[2.53, 1.0, 0], [2.53, 1.0, 1], [2.54, 0.99, 0], [2.54, 0.99, 1]], [[2.54, 0.99, 0], [2.54, 0.99, 1], [2.61, 0.99, 0], [2.61, 0.99, 1]], [[2.61, 0.99, 0], [2.61, 0.99, 1], [2.61, 0.65, 0], [2.61, 0.65, 1]], [[2.61, 0.65, 0], [2.61, 0.65, 1], [2.19, 0.65, 0], [2.19, 0.65, 1]]]]
+
+    wall_vertical_faces = [[0, 1, 3, 2]]
+
+    
+    # Vertical faces
     boxcount = 0
     wallcount = 0
     
     wall_parent, _ = init_object("Walls")
     
-    faces = wall_horizontal_faces
-    
-    for walls in wall_horizontal_verts:
+    faces = wall_vertical_faces
+    verts = wall_vertical_verts
+
+    for walls in verts:
         boxname = "Box" + str(boxcount)
         for wall in walls:
             wallname = "Wall" + str(wallcount)
+
             obj = create_custom_mesh(
                 boxname + wallname,
-                walls,
+                wall,
                 faces,
                 cen=None,
-                mat=create_mat((0.5, 0.5, 0.5, 1)),
+                mat=create_mat((255, 255, 255, 1)),
             )
             obj.parent = wall_parent
 
             wallcount += 1
         boxcount += 1
-        
-    print("Hello")
 
-#    if polygons and type:
-        
-        # get image wall data
-        
-        
-#        verts = read_from_file(path_to_wall_vertical_verts_file)
-#        faces = read_from_file(path_to_wall_vertical_faces_file)
-        
-#        polygon_walls = []
-#        type_walls = []
-#        
-#        for idx, t in enumerate(type_walls):
-#            # polygon corresponding to type
-#            p = polygons[idx]
-#            if t.type == 'wall':
-#                type_walls.append(t)
-#                polygon_walls.append(p)
-#        
-#        boxcount = 0
-#        wallcount = 0
-#        
-#        wall_parent, _ = init_object("Walls")
-#        
-#        for walls in polygon_walls:
-#            boxname = "Box" + str(boxcount)
-#            for wall in walls:
-#                wallname = "Wall" + str(wallcount)
-#                obj = create_custom_mesh(
-#                    boxname + wallname,
-#                    wall,
-#                    faces,
-#                    cen=cen,
-#                    mat=create_mat((0.5, 0.5, 0.5, 1)),
-#                )
-#                obj.parent = wall_parent
 
-#                wallcount += 1
-#            boxcount += 1
-        
+    # Horizontal faces
+    faces = wall_horizontal_faces
+    verts = wall_horizontal_verts
 
-        # Create mesh from data
-#        boxcount = 0
-#        wallcount = 0
+    # Create mesh from data
+    boxcount = 0
+    wallcount = 0
 
-        # Create parent
-#        wall_parent, _ = init_object("Walls")
-
-#        for walls in verts:
-#            boxname = "Box" + str(boxcount)
-#            for wall in walls:
-#                wallname = "Wall" + str(wallcount)
-
-#                obj = create_custom_mesh(
-#                    boxname + wallname,
-#                    wall,
-#                    faces,
-#                    cen=cen,
-#                    mat=create_mat((0.5, 0.5, 0.5, 1)),
-#                )
-#                obj.parent = wall_parent
-
-#                wallcount += 1
-#            boxcount += 1
-
-        # get image top wall data
-#        verts = read_from_file(path_to_wall_horizontal_verts_file)
-#        faces = read_from_file(path_to_wall_horizontal_faces_file)
-
-        # Create mesh from data
-#        boxcount = 0
-#        wallcount = 0
-
-#        for i in range(0, len(verts)):
-#            roomname = "VertWalls" + str(i)
-#            obj = create_custom_mesh(
-#                roomname,
-#                verts[i],
-#                faces[i],
-#                cen=cen,
-#                mat=create_mat((0.5, 0.5, 0.5, 1)),
-#            )
-#            obj.parent = wall_parent
+    for i in range(0, len(verts)):
+        roomname = "VertWalls" + str(i)
+        obj = create_custom_mesh(
+            roomname,
+            verts[i],
+            faces[i],
+            cen=None,
+            mat=create_mat((255, 255, 255, 1)),
+        )
+        obj.parent = wall_parent
 
     wall_parent.parent = parent
 
-#    """
-#    Create Windows
-#    """
-#    if (
-#        os.path.isfile(path_to_windows_vertical_verts_file + ".txt")
-#        and os.path.isfile(path_to_windows_vertical_faces_file + ".txt")
-#        and os.path.isfile(path_to_windows_horizontal_verts_file + ".txt")
-#        and os.path.isfile(path_to_windows_horizontal_faces_file + ".txt")
-#    ):
-#        # get image wall data
-#        verts = read_from_file(path_to_windows_vertical_verts_file)
-#        faces = read_from_file(path_to_windows_vertical_faces_file)
-
-#        # Create mesh from data
-#        boxcount = 0
-#        wallcount = 0
-
-#        # Create parent
-#        wall_parent, _ = init_object("Windows")
-
-#        for walls in verts:
-#            boxname = "Box" + str(boxcount)
-#            for wall in walls:
-#                wallname = "Wall" + str(wallcount)
-
-#                obj = create_custom_mesh(
-#                    boxname + wallname,
-#                    wall,
-#                    faces,
-#                    cen=cen,
-#                    mat=create_mat((0.5, 0.5, 0.5, 1)),
-#                )
-#                obj.parent = wall_parent
-
-#                wallcount += 1
-#            boxcount += 1
-
-#        # get windows
-#        verts = read_from_file(path_to_windows_horizontal_verts_file)
-#        faces = read_from_file(path_to_windows_horizontal_faces_file)
-
-#        # Create mesh from data
-#        boxcount = 0
-#        wallcount = 0
-
-#        for i in range(0, len(verts)):
-#            roomname = "VertWindow" + str(i)
-#            obj = create_custom_mesh(
-#                roomname,
-#                verts[i],
-#                faces[i],
-#                cen=cen,
-#                mat=create_mat((0.5, 0.5, 0.5, 1)),
-#            )
-#            obj.parent = wall_parent
-
-#        wall_parent.parent = parent
-
-#    """
-#    Create Doors
-#    """
-#    if (
-#        os.path.isfile(path_to_doors_vertical_verts_file + ".txt")
-#        and os.path.isfile(path_to_doors_vertical_faces_file + ".txt")
-#        and os.path.isfile(path_to_doors_horizontal_verts_file + ".txt")
-#        and os.path.isfile(path_to_doors_horizontal_faces_file + ".txt")
-#    ):
-
-#        # get image wall data
-#        verts = read_from_file(path_to_doors_vertical_verts_file)
-#        faces = read_from_file(path_to_doors_vertical_faces_file)
-
-#        # Create mesh from data
-#        boxcount = 0
-#        wallcount = 0
-
-#        # Create parent
-#        wall_parent, _ = init_object("Doors")
-
-#        for walls in verts:
-#            boxname = "Box" + str(boxcount)
-#            for wall in walls:
-#                wallname = "Wall" + str(wallcount)
-
-#                obj = create_custom_mesh(
-#                    boxname + wallname,
-#                    wall,
-#                    faces,
-#                    cen=cen,
-#                    mat=create_mat((0.5, 0.5, 0.5, 1)),
-#                )
-#                obj.parent = wall_parent
-
-#                wallcount += 1
-#            boxcount += 1
-
-#        # get windows
-#        verts = read_from_file(path_to_doors_horizontal_verts_file)
-#        faces = read_from_file(path_to_doors_horizontal_faces_file)
-
-#        # Create mesh from data
-#        boxcount = 0
-#        wallcount = 0
-
-#        for i in range(0, len(verts)):
-#            roomname = "VertWindow" + str(i)
-#            obj = create_custom_mesh(
-#                roomname,
-#                verts[i],
-#                faces[i],
-#                cen=cen,
-#                mat=create_mat((0.5, 0.5, 0.5, 1)),
-#            )
-#            obj.parent = wall_parent
-
-#        wall_parent.parent = parent
-
-#    """
-#    Create Floor
-#    """
-#    if os.path.isfile(path_to_floor_verts_file + ".txt") and os.path.isfile(
-#        path_to_floor_faces_file + ".txt"
-#    ):
-
-#        # get image wall data
-#        verts = read_from_file(path_to_floor_verts_file)
-#        faces = read_from_file(path_to_floor_faces_file)
-
-#        # Create mesh from data
-#        cornername = "Floor"
-#        obj = create_custom_mesh(
-#            cornername, verts, [faces], mat=create_mat((40, 1, 1, 1)), cen=cen
-#        )
-#        obj.parent = parent
-
-#        """
-#        Create rooms
-#        """
-#        # get image wall data
-#        verts = read_from_file(path_to_rooms_verts_file)
-#        faces = read_from_file(path_to_rooms_faces_file)
-
-#        # Create parent
-#        room_parent, _ = init_object("Rooms")
-
-#        for i in range(0, len(verts)):
-#            roomname = "Room" + str(i)
-#            obj = create_custom_mesh(roomname, verts[i], faces[i], cen=cen)
-#            obj.parent = room_parent
-
-#        room_parent.parent = parent
-
-    # Perform Floorplan final position, rotation and scale
-#    if rot is not None:
-#        # compensate for mirrored image
-#        parent.rotation_euler = [
-#            math.radians(rot[0]) + math.pi,
-#            math.radians(rot[1]),
-#            math.radians(rot[2]),
-#        ]
-
-#    if pos is not None:
-#        parent.location.x += pos[0]
-#        parent.location.y += pos[1]
-#        parent.location.z += pos[2]
-
-#    if scale is not None:
-#        parent.scale.x = scale[0]
-#        parent.scale.y = scale[1]
-#        parent.scale.z = scale[2]
-    return params
 
 
-#if __name__ == "__main__":
-#    main(sys.argv)
+def main(argv):
 
+    # Remove starting object cube
+    objs = bpy.data.objects
+    
+    if "Cube" in objs:
+        objs.remove(objs["Cube"], do_unlink=True)
+    
+    """
+    Instantiate
+    Each argument after 7 will be a floorplan path
+    """
+    params = create_floorplan()
+    
+#    bpy.ops.wm.save_as_mainfile(filepath="%s/%s.blend" %("C:/Users/JackChua/Projects/Floorplan/CubiCasa5k/data/output/example/", params["id"]))    
+    
 
 main(['0'])

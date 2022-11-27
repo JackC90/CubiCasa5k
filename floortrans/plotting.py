@@ -736,7 +736,7 @@ def _grid_bbox(x, y):
 
 def _bbox_to_rect(bbox):
     l, r, b, t = bbox
-    return Polygon([(l, b), (r, b), (r, t), (l, t)])
+    return Polygon([(l, b), (l, t), (r, t), (r, b)])
 
 
 def shp_mask(shp, x, y, m=None):
