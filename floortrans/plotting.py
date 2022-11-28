@@ -805,11 +805,12 @@ def _convert_np_float(val):
         return val.item()
     return val
 
-def polygons_to_file(filepath, polygons, types, room_polygons, room_types):
+def polygons_to_file(filepath, id, polygons, types, room_polygons, room_types):
     """
     Transform polygons to JSON and saves them to a file 
     """
     dictionary = {
+      "id": id,
       "polygons": polygons.tolist(),
       "types": types,
       "room_polygons": list(map(lambda p : p.__geo_interface__, room_polygons)),
@@ -820,11 +821,12 @@ def polygons_to_file(filepath, polygons, types, room_polygons, room_types):
     return dictionary
 
 
-def polygons_to_json(polygons, types, room_polygons, room_types):
+def polygons_to_json(id, polygons, types, room_polygons, room_types):
     """
     Transform polygons to JSON
     """
     dictionary = {
+      "id": id,
       "polygons": polygons.tolist(),
       "types": types,
       "room_polygons": list(map(lambda p : p.__geo_interface__, room_polygons)),
