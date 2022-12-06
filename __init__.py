@@ -5,7 +5,17 @@ import sys
 import math
 import os.path
 from operator import itemgetter
-from Blender.utils import order_clockwise
+
+# adapted from https://gist.github.com/flashlib/e8261539915426866ae910d55a3f9959
+def order_clockwise(pts):
+    xSorted = pts[np.argsort(pts[:, 0]), :]
+    leftMost = xSorted[:2, :]
+    rightMost = xSorted[2:, :]
+    leftMost = leftMost[np.argsort(leftMost[:, 1]), :]
+    (tl, bl) = leftMost
+    rightMost = rightMost[np.argsort(rightMost[:, 1]), :]
+    (tr, br) = rightMost
+    return np.array([tl, tr, br, bl], dtype="float32")
 
 def categorize_walls_icons(polygons, types):
     polygon_walls = []
