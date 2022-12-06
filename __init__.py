@@ -5,6 +5,7 @@ import sys
 import math
 import os.path
 from operator import itemgetter
+from Blender.utils import order_clockwise
 
 def categorize_walls_icons(polygons, types):
     polygon_walls = []
@@ -24,7 +25,7 @@ def categorize_walls_icons(polygons, types):
     return polygon_walls, type_walls, polygon_icons, type_icons
 
 
-def wall_2d_to_3d(polygons, types, wall_height):
+def wall_2d_to_3d(polygons, wall_height, scale = 1.):
     l_polygons = len(polygons)
 
     wall_horizontal_verts = np.empty((l_polygons * 2, 1))
@@ -32,36 +33,55 @@ def wall_2d_to_3d(polygons, types, wall_height):
     wall_vertical_verts = []
     wall_vertical_faces = []
 
-    np_polygon = np.array(polygons)
+    np_polygon = np.divide(np.array(polygons), scale)
 
     i = 0
     for shape in np.nditer(np_polygon):
         l = len(shape)
-        t = np.empty((l, 1))
-        b = np.empty((l, 1))
+        h_t = np.empty((l, 1))
+        h_b = np.empty((l, 1))
+
+        sorted_shape = order_clockwise(shape)
 
         j = 0
-        for point in np.nditer(shape):
+        for point in np.nditer(sorted_shape):
             t_new = np.array([point[0], point[1], wall_height])
             b_new = np.array([point[0], point[1], 0])
-            t[j] = t_new
-            b[j] = b_new
+
+            # Horizontal
+            h_t[j] = t_new
+            h_b[j] = b_new
+
             j += 1
-        
+
+        # Horizontal
         h_faces = np.linspace(0, l, num=l)
 
         # Top
-        wall_horizontal_verts[i] = t_new
+        wall_horizontal_verts[i] = h_t
         wall_horizontal_faces[i] = h_faces
 
         # Bottom
         i += 1
-        wall_horizontal_verts[i] = b_new
+        wall_horizontal_verts[i] = h_b
         wall_horizontal_faces[i] = h_faces
         i += 1
 
-            
+         # Vertical
+        t_tl, t_tr, t_br, t_bl = t_new
+        b_tl, b_tr, b_br, b_bl = b_new
 
+        v_l = np.array([t_tl, t_bl, b_bl, b_tl])
+        v_t = np.array([t_tr, t_tl, b_tl, b_tr])
+        v_r = np.array([t_br, t_tr, b_tr, b_br])
+        v_b = np.array([t_bl, t_br, b_br, b_bl])
+
+        v = np.array([v_l, v_t, v_r, v_b])
+
+        wall_vertical_verts[i] = v
+        wall_vertical_faces[i] = np.linspace(0, l, num=l)
+
+    return wall_horizontal_verts, wall_horizontal_faces, wall_vertical_verts, wall_vertical_faces
 
 
 def init_object(name):
@@ -170,14 +190,16 @@ def create_floorplan():
     wall_vertical_faces = [[0, 1, 3, 2]]
 
     # Parsed
-    pixel_scale_factor = 10
-    wall_height = 3
+    pixel_scale_factor = 10.
+    wall_height = 2.5
 
-    wall_horizontal_verts = polygons
-    wall_horizontal_faces
+    wall_horizontal_verts, wall_horizontal_faces, wall_vertical_verts, wall_vertical_faces = wall_2d_to_3d(polygons, wall_height, pixel_scale_factor)
 
-    wall_vertical_verts
-    wall_vertical_faces
+    # wall_horizontal_verts = polygons
+    # wall_horizontal_faces
+
+    # wall_vertical_verts
+    # wall_vertical_faces
     
     # Vertical faces
     boxcount = 0
