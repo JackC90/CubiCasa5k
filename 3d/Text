@@ -1,0 +1,13 @@
+import bpy
+import numpy as np
+
+verts = np.array([[0, 1, 2, 3]])
+faces = np.array([[-0.02999997, -0.22500002,  0.        ],
+ [ 0.02999997, -0.22500002,  0.        ],
+ [ 0.02999997,  0.22500002,  0.        ],
+ [-0.02999997,  0.22500002, 0.        ]])
+
+mymesh = bpy.data.meshes.new("Sampple")
+myobject = bpy.data.objects.new("Object", mymesh)
+bpy.context.collection.objects.link(myobject)
+mymesh.from_pydata(verts, [], faces)

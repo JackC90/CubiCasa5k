@@ -39,9 +39,9 @@ def wall_2d_to_3d(polygons, wall_height, scale = 1.):
     l_polygons = len(polygons)
 
     wall_horizontal_verts = np.empty(shape=(l_polygons * 2, 4, 3), dtype="float32")
-    wall_horizontal_faces = np.empty(shape=(l_polygons * 2, 4), dtype="float32")
-    wall_vertical_verts = np.empty(shape=(l_polygons * 4, 4, 3), dtype="float32")
-    wall_vertical_faces = np.empty(shape=(l_polygons * 4, 4), dtype="float32")
+    wall_horizontal_faces = np.empty(shape=(l_polygons * 2, 1, 4), dtype="float32")
+    wall_vertical_verts = np.empty(shape=(l_polygons, 4, 4, 3), dtype="float32")
+    wall_vertical_faces = np.array([np.arange(0, 4, 1)])
 
     np_polygon = np.divide(np.array(polygons), scale)
     
@@ -66,7 +66,7 @@ def wall_2d_to_3d(polygons, wall_height, scale = 1.):
             j += 1
 
         # Horizontal
-        h_faces = range(l)
+        h_faces = np.array([np.arange(0, l, 1)])
 
         # Top
         wall_horizontal_verts[i] = h_t
@@ -87,14 +87,9 @@ def wall_2d_to_3d(polygons, wall_height, scale = 1.):
         v_r = [t_br, t_tr, b_tr, b_br]
         v_b = [t_bl, t_br, b_br, b_bl]
 
-        sides = [v_l, v_t, v_r, v_b]
-        for side in sides:
-            side_l = len(side)
-            wall_vertical_verts[i_v] = side
-            print(np.linspace(0, side_l, num=side_l))
-            wall_vertical_faces[i_v] = range(side_l)
-            i_v += 1
-
+        sides = np.array([v_l, v_t, v_r, v_b])
+        wall_vertical_verts[i_v] = sides
+        i_v += 1
     return wall_horizontal_verts, wall_horizontal_faces, wall_vertical_verts, wall_vertical_faces
 
 
@@ -146,12 +141,14 @@ def create_custom_mesh(objname, verts, faces, mat=None, cen=None):
 
     # Rearrange verts to put pivot point in center of mesh
     # Find center of verts
-    print(verts)
     center = get_mesh_center(verts)
     # Subtract center from verts before creation
     proper_verts = subtract_center_verts(center, verts)
-
     # Generate mesh data
+    print(objname + "============")
+    print(faces)
+    print("verts __________")
+    print(proper_verts)
     mymesh.from_pydata(proper_verts, [], faces)
     # Calculate the edges
     mymesh.update(calc_edges=True)
@@ -190,6 +187,12 @@ def create_floorplan():
     parent, _ = init_object("Floorplan" + str(id))
     # Set Cursor start
     bpy.context.scene.cursor.location = (0, 0, 0)
+    
+    # Parsed
+    pixel_scale_factor = 100.
+    wall_height = 2.5
+
+    wall_horizontal_verts, wall_horizontal_faces, wall_vertical_verts, wall_vertical_faces = wall_2d_to_3d(polygons, wall_height, pixel_scale_factor)
 
     """
     Create Walls
@@ -203,17 +206,8 @@ def create_floorplan():
 
 #    wall_vertical_faces = [[0, 1, 3, 2]]
 
-    # Parsed
-    pixel_scale_factor = 100.
-    wall_height = 2.5
-
-    wall_horizontal_verts, wall_horizontal_faces, wall_vertical_verts, wall_vertical_faces = wall_2d_to_3d(polygons, wall_height, pixel_scale_factor)
-
-    # wall_horizontal_verts = polygons
-    # wall_horizontal_faces
-
-    # wall_vertical_verts
-    # wall_vertical_faces
+    # Wall settings
+    wall_mat = create_mat((255, 255, 255, 1))    
     
     # Vertical faces
     boxcount = 0
@@ -223,23 +217,23 @@ def create_floorplan():
     
     faces = wall_vertical_faces
     verts = wall_vertical_verts
+    
+#    for walls in verts:
+#        boxname = "Box" + str(boxcount)
+#        for wall in walls:
+#            wallname = "Wall" + str(wallcount)
 
-    for walls in verts:
-        boxname = "Box" + str(boxcount)
-        for wall in walls:
-            wallname = "Wall" + str(wallcount)
+#            obj = create_custom_mesh(
+#                boxname + wallname,
+#                wall,
+#                faces,
+#                cen=None,
+#                mat=wall_mat
+#            )
+#            obj.parent = wall_parent
 
-            obj = create_custom_mesh(
-                boxname + wallname,
-                wall,
-                faces,
-                cen=None,
-                mat=create_mat((255, 255, 255, 1)),
-            )
-            obj.parent = wall_parent
-
-            wallcount += 1
-        boxcount += 1
+#            wallcount += 1
+#        boxcount += 1
 
 
     # Horizontal faces
@@ -251,13 +245,14 @@ def create_floorplan():
     wallcount = 0
 
     for i in range(0, len(verts)):
+        i = 0
         roomname = "VertWalls" + str(i)
         obj = create_custom_mesh(
             roomname,
             verts[i],
             faces[i],
             cen=None,
-            mat=create_mat((255, 255, 255, 1)),
+            mat=wall_mat
         )
         obj.parent = wall_parent
 
