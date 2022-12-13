@@ -5,9 +5,11 @@ import sys
 import math
 import os.path
 from operator import itemgetter
+from shapely import geometry   
+    
 
 # adapted from https://gist.github.com/flashlib/e8261539915426866ae910d55a3f9959
-def order_clockwise(pts):
+def order_clockwise_bbox(pts):
     xSorted = pts[np.argsort(pts[:, 0]), :]
     leftMost = xSorted[:2, :]
     rightMost = xSorted[2:, :]
@@ -52,7 +54,7 @@ def wall_2d_to_3d(polygons, wall_height, scale = 1.):
         h_t = np.empty(shape=(l, 3), dtype="float32")
         h_b = np.empty(shape=(l, 3), dtype="float32")
 
-        sorted_shape = order_clockwise(shape)
+        sorted_shape = order_clockwise_bbox(shape)
 
         j = 0
         for point in sorted_shape:
@@ -92,6 +94,38 @@ def wall_2d_to_3d(polygons, wall_height, scale = 1.):
         i_v += 1
     return wall_horizontal_verts, wall_horizontal_faces, wall_vertical_verts, wall_vertical_faces
 
+
+def room_2d_to_3d(room_polygons, scale = 1.):
+    l_rooms = len(room_polygons)
+    
+    top = np.array([], dtype="float32")
+    bottom = np.array([], dtype="float32")
+    
+    for shape in np_polygon:
+        pol_type = shape["type"]
+        obj = getattr(geometry, pol_type)
+        obj = obj if obj else geometry.Polygon
+        pol = obj(shape["coordinates"])
+        pol_rev = pol.reverse()
+        
+        # if clockwise       
+        if pol.is_ccw:
+            # Floor
+            for point in pol["coordinates"]:
+                np.append(bottom, [[point.x, point.y, 0.]], axis=0)
+            # Ceiling 
+            for point in pol_rev["coordinates"]:
+                np.append(top, [[point.x, point.y, 0.]], axis=0)
+              
+        else:
+            # Ceiling 
+            for point in pol["coordinates"]:
+                np.append(top, [[point.x, point.y, 0.]], axis=0)
+            # Floor
+            for point in pol_rev["coordinates"]:
+                np.append(bottom, [[point.x, point.y, 0.]], axis=0)
+    return top, bottom
+        
 
 def init_object(name):
     # Create new blender object and return references to mesh and object
