@@ -5,7 +5,7 @@ import sys
 import math
 import os.path
 from operator import itemgetter
-from shapely import geometry   
+from shapely import geometry
     
 
 # adapted from https://gist.github.com/flashlib/e8261539915426866ae910d55a3f9959
@@ -37,7 +37,7 @@ def categorize_walls_icons(polygons, types):
     return polygon_walls, type_walls, polygon_icons, type_icons
 
 
-def wall_2d_to_3d(polygons, wall_height, scale = 1.):
+def wall_2d_to_3d(polygons, wall_height = 1., scale = 1.):
     l_polygons = len(polygons)
 
     wall_horizontal_verts = np.empty(shape=(l_polygons * 2, 4, 3), dtype="float32")
@@ -94,37 +94,38 @@ def wall_2d_to_3d(polygons, wall_height, scale = 1.):
         i_v += 1
     return wall_horizontal_verts, wall_horizontal_faces, wall_vertical_verts, wall_vertical_faces
 
-
-def room_2d_to_3d(room_polygons, scale = 1.):
+# Takes Shapely polygons and converts each 2D point into 3D vertex
+def room_2d_to_3d(room_polygons, wall_height = 1., scale = 1.):
     l_rooms = len(room_polygons)
     
-    top = np.array([], dtype="float32")
-    bottom = np.array([], dtype="float32")
+    top_verts = np.array([], dtype="float32")
+    bottom_verts = np.array([], dtype="float32")
+    top_faces = np.array([], dtype="int32")
+    bottom_faces = np.array([], dtype="int32")
     
-    for shape in np_polygon:
+    for shape in room_polygons:
         pol_type = shape["type"]
-        obj = getattr(geometry, pol_type)
-        obj = obj if obj else geometry.Polygon
-        pol = obj(shape["coordinates"])
-        pol_rev = pol.reverse()
+        Poly = geometry.LinearRing
+        pol = (Poly(shape["coordinates"][0])) if shape["coordinates"] else None
         
-        # if clockwise       
-        if pol.is_ccw:
+        # Clock-wise        
+        pol = (Poly(list(pol.coords)[::-1])) if not pol.is_ccw else pol
+        
+        for point in pol.coords:
+            print(point)
+            x = point[0]
+            y = point[1]
             # Floor
-            for point in pol["coordinates"]:
-                np.append(bottom, [[point.x, point.y, 0.]], axis=0)
-            # Ceiling 
-            for point in pol_rev["coordinates"]:
-                np.append(top, [[point.x, point.y, 0.]], axis=0)
-              
-        else:
-            # Ceiling 
-            for point in pol["coordinates"]:
-                np.append(top, [[point.x, point.y, 0.]], axis=0)
-            # Floor
-            for point in pol_rev["coordinates"]:
-                np.append(bottom, [[point.x, point.y, 0.]], axis=0)
-    return top, bottom
+            np.append(bottom_verts, [[x, y, 0.]], axis=0)
+            # Ceiling
+            np.insert(top_verts, [[x, y, wall_height]], axis=0)
+        
+        # Faces
+        pol_len = len(pol.coords)
+        np.append(bottom_faces, [[np.arange(0, pol_len, 1)]], axis=0)
+        np.append(top_faces, [[np.arange(0, pol_len, 1)]], axis=0)
+    
+    return top_verts, bottom_verts, top_faces, bottom_faces
         
 
 def init_object(name):
@@ -180,10 +181,6 @@ def create_custom_mesh(objname, verts, faces, mat=None, cen=None):
     # Subtract center from verts before creation
     proper_verts = subtract_center_verts(center, verts)
     # Generate mesh data
-    print(objname + "============")
-    print(faces)
-    print("verts __________")
-    print(proper_verts)
     mymesh.from_pydata(proper_verts, [], faces)
     # Calculate the edges
     mymesh.update(calc_edges=True)
@@ -228,6 +225,10 @@ def create_floorplan():
     wall_height = 2.5
 
     wall_horizontal_verts, wall_horizontal_faces, wall_vertical_verts, wall_vertical_faces = wall_2d_to_3d(polygons, wall_height, pixel_scale_factor)
+    
+    top_verts, top_faces, bottom_verts, bottom_faces = room_2d_to_3d(room_polygons, wall_height, pixel_scale_factor)
+    
+#    print(top_verts, top_faces, bottom_verts, bottom_faces)
 
     """
     Create Walls
