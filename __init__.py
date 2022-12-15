@@ -98,10 +98,10 @@ def wall_2d_to_3d(polygons, wall_height = 1., scale = 1.):
 def room_2d_to_3d(room_polygons, wall_height = 1., scale = 1.):
     l_rooms = len(room_polygons)
     
-    top_verts = np.array([], dtype="float32")
-    bottom_verts = np.array([], dtype="float32")
-    top_faces = np.array([], dtype="int32")
-    bottom_faces = np.array([], dtype="int32")
+    top_verts = []
+    bottom_verts = []
+    top_faces = []
+    bottom_faces = []
     
     for shape in room_polygons:
         pol_type = shape["type"]
@@ -116,14 +116,14 @@ def room_2d_to_3d(room_polygons, wall_height = 1., scale = 1.):
             x = point[0]
             y = point[1]
             # Floor
-            np.append(bottom_verts, [[x, y, 0.]], axis=0)
+            bottom_verts.append([x, y, 0.])
             # Ceiling
-            np.insert(top_verts, [[x, y, wall_height]], axis=0)
+            top_verts.append([x, y, wall_height])
         
         # Faces
         pol_len = len(pol.coords)
-        np.append(bottom_faces, [[np.arange(0, pol_len, 1)]], axis=0)
-        np.append(top_faces, [[np.arange(0, pol_len, 1)]], axis=0)
+        bottom_faces.append([np.arange(0, pol_len, 1)])
+        top_faces.append([np.arange(0, pol_len, 1)])
     
     return top_verts, bottom_verts, top_faces, bottom_faces
         
@@ -293,7 +293,31 @@ def create_floorplan():
         obj.parent = wall_parent
 
     wall_parent.parent = parent
+    
+    # Rooms
+    room_parent, _ = init_object("Rooms")
+    
+    for i in range(0, len(verts)):
+        roomname = "Room" + str(i)
+        obj = create_custom_mesh(
+            roomname,
+            bottom_verts[i],
+            bottom_faces[i],
+            cen=cen,
+            mat=wall_mat
+        )
+        
+        roomname = "Room_Ceiling" + str(i)
+        obj = create_custom_mesh(
+            roomname,
+            top_verts[i],
+            top_faces[i],
+            cen=cen,
+            mat=wall_mat
+        )
+        obj.parent = wall_parent
 
+    room_parent.parent = parent
 
 
 def main(argv):
