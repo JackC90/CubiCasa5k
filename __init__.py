@@ -104,28 +104,37 @@ def room_2d_to_3d(room_polygons, wall_height = 1., scale = 1.):
     bottom_faces = []
     
     for shape in room_polygons:
+        coords = np.divide(np.array(shape["coordinates"]), scale)
         pol_type = shape["type"]
         Poly = geometry.LinearRing
-        pol = (Poly(shape["coordinates"][0])) if shape["coordinates"] else None
+        pol = (Poly(coords[0])) if coords.any() else None
         
         # Clock-wise        
         pol = (Poly(list(pol.coords)[::-1])) if not pol.is_ccw else pol
         
-        for point in pol.coords:
-            print(point)
+        pol_len = len(pol.coords) - 1
+        
+        bottom_vert_points = list(range(pol_len))
+        top_vert_points = list(range(pol_len))
+        
+        for j in range(pol_len):
+            point = pol.coords[j]
             x = point[0]
             y = point[1]
             # Floor
-            bottom_verts.append([x, y, 0.])
+            bottom_vert_points[j] = [x, y, 0.]
             # Ceiling
-            top_verts.append([x, y, wall_height])
+            top_vert_points[pol_len - 1 - j] = [x, y, wall_height]
         
+        # Vertices
+        bottom_verts.append(bottom_vert_points)
+        top_verts.append(top_vert_points)
+          
         # Faces
-        pol_len = len(pol.coords)
-        bottom_faces.append([np.arange(0, pol_len, 1)])
-        top_faces.append([np.arange(0, pol_len, 1)])
+        bottom_faces.append([list(range(0, pol_len, 1))])
+        top_faces.append([list(range(0, pol_len, 1))])
     
-    return top_verts, bottom_verts, top_faces, bottom_faces
+    return top_verts, top_faces, bottom_verts, bottom_faces
         
 
 def init_object(name):
@@ -216,7 +225,7 @@ def create_floorplan():
     
     id, polygons, types, room_polygons, room_types = itemgetter('id', 'polygons', 'types', 'room_polygons', 'room_types')(params)
     
-    parent, _ = init_object("Floorplan" + str(id))
+    parent, _ = init_object("Floorplan_" + str(id))
     # Set Cursor start
     bpy.context.scene.cursor.location = (0, 0, 0)
     
@@ -256,9 +265,9 @@ def create_floorplan():
     verts = wall_vertical_verts
     
     for walls in verts:
-        boxname = "Box" + str(boxcount)
+        boxname = "Box_" + str(boxcount)
         for wall in walls:
-            wallname = "Wall" + str(wallcount)
+            wallname = "Wall_Ver_" + str(wallcount)
 
             obj = create_custom_mesh(
                 boxname + wallname,
@@ -282,7 +291,7 @@ def create_floorplan():
     wallcount = 0
 
     for i in range(0, len(verts)):
-        roomname = "VertWalls" + str(i)
+        roomname = "Walls_Hor_" + str(i)
         obj = create_custom_mesh(
             roomname,
             verts[i],
@@ -297,8 +306,8 @@ def create_floorplan():
     # Rooms
     room_parent, _ = init_object("Rooms")
     
-    for i in range(0, len(verts)):
-        roomname = "Room" + str(i)
+    for i in range(len(bottom_verts)):
+        roomname = "Room_" + str(i)
         obj = create_custom_mesh(
             roomname,
             bottom_verts[i],
@@ -306,8 +315,7 @@ def create_floorplan():
             cen=cen,
             mat=wall_mat
         )
-        
-        roomname = "Room_Ceiling" + str(i)
+        roomname = "RoomCeiling_" + str(i)
         obj = create_custom_mesh(
             roomname,
             top_verts[i],
@@ -315,7 +323,7 @@ def create_floorplan():
             cen=cen,
             mat=wall_mat
         )
-        obj.parent = wall_parent
+        obj.parent = room_parent
 
     room_parent.parent = parent
 
